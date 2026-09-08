@@ -154,7 +154,7 @@ describe('/api/todos', () => {
 
   it('POST /api/todos로 TODO를 생성하고 목록에 정렬되어 노출된다', async () => {
     const client = new TestClient(port)
-    const user = await registerAndLogin(client)
+    await registerAndLogin(client)
 
     const res = await client.request('POST', '/api/todos', {
       title: '두 번째 TODO',
@@ -310,8 +310,7 @@ describe('/api/todos', () => {
     const client = new TestClient(port)
     await registerAndLogin(client)
 
-    const later = await client.request('POST', '/api/todos', { title: '미완료', dueDate: '2024-12-01T00:00:00.000Z' })
-    const laterBody = (await later.json()) as { todo: TestTodo }
+    await client.request('POST', '/api/todos', { title: '미완료', dueDate: '2024-12-01T00:00:00.000Z' })
     const earlier = await client.request('POST', '/api/todos', { title: '완료', dueDate: '2024-01-01T00:00:00.000Z' })
     const earlierBody = (await earlier.json()) as { todo: TestTodo }
 
