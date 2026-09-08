@@ -27,3 +27,48 @@ export const userSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type User = z.infer<typeof userSchema>
+
+export const MOODS = ['happy', 'neutral', 'sad', 'angry', 'anxious'] as const
+
+export const moodSchema = z.enum(MOODS, {
+  message: '감정은 happy, neutral, sad, angry, anxious 중 하나여야 합니다.',
+})
+
+export type Mood = z.infer<typeof moodSchema>
+
+export const diaryDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜는 YYYY-MM-DD 형식이어야 합니다.')
+
+export const diaryMonthSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}$/, '월은 YYYY-MM 형식이어야 합니다.')
+
+export const diaryCreateSchema = z.object({
+  date: diaryDateSchema,
+  mood: moodSchema,
+  content: z.string().min(1, '내용을 입력하세요.'),
+})
+
+export const diaryUpdateSchema = z
+  .object({
+    mood: moodSchema.optional(),
+    content: z.string().min(1, '내용을 입력하세요.').optional(),
+  })
+  .refine((data) => data.mood !== undefined || data.content !== undefined, {
+    message: '수정할 감정이나 내용을 입력하세요.',
+  })
+
+export const diarySchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  mood: moodSchema,
+  content: z.string(),
+  date: z.string(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+
+export type Diary = z.infer<typeof diarySchema>
+export type DiaryCreateInput = z.infer<typeof diaryCreateSchema>
+export type DiaryUpdateInput = z.infer<typeof diaryUpdateSchema>
