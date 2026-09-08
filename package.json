@@ -1,0 +1,19 @@
+{
+  "name": "wellness-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "웰니스 생산성 웹 사이트 — 일정정리, 캘린더, 메모, 뽀모도로, 일기",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
