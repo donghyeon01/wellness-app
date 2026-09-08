@@ -27,3 +27,45 @@ export const userSchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type User = z.infer<typeof userSchema>
+
+export const todoSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  description: z.string().nullable().optional(),
+  priority: z.number().int().min(0).max(2),
+  dueDate: z.string().datetime().nullable().optional(),
+  completed: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+})
+
+const todoBaseSchema = z.object({
+  title: z.string().min(1, '제목을 입력하세요.').max(200, '제목은 200자 이하로 입력하세요.'),
+  description: z.string().max(2000, '설명은 2000자 이하로 입력하세요.').nullish(),
+  priority: z.number().int().min(0, '우선순위는 0~2 사이여야 합니다.').max(2, '우선순위는 0~2 사이여야 합니다.'),
+  dueDate: z
+    .string()
+    .refine((v) => v === undefined || v === null || v === '' || !Number.isNaN(new Date(v).getTime()), {
+      message: '유효한 날짜를 입력하세요.',
+    })
+    .nullish(),
+})
+
+export const todoInputSchema = todoBaseSchema.extend({
+  priority: todoBaseSchema.shape.priority.default(0),
+})
+
+export const todoUpdateSchema = todoBaseSchema.partial().extend({
+  completed: z.boolean().optional(),
+})
+
+export const todoFiltersSchema = z.object({
+  completed: z.enum(['all', 'active', 'completed']).default('all'),
+  priority: z.enum(['all', '0', '1', '2']).default('all'),
+})
+
+export type Todo = z.infer<typeof todoSchema>
+export type TodoInput = z.infer<typeof todoInputSchema>
+export type TodoUpdateInput = z.infer<typeof todoUpdateSchema>
+export type TodoFilters = z.infer<typeof todoFiltersSchema>
