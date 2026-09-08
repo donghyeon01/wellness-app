@@ -14,7 +14,7 @@ export function useMemos(category?: string) {
   })
 }
 
-export function useMemo(id: string | undefined) {
+export function useMemoDetail(id: string | undefined) {
   return useQuery({
     queryKey: ['memos', 'detail', id],
     queryFn: async () => {

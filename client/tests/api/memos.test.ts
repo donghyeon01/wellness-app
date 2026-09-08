@@ -4,7 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   useMemos,
-  useMemo,
+  useMemoDetail,
   useCreateMemo,
   useUpdateMemo,
   useDeleteMemo,
@@ -62,18 +62,18 @@ describe('memo hooks', () => {
     expect(result.current.data).toEqual([memoFixture])
   })
 
-  it('useMemo가 단건을 조회한다', async () => {
+  it('useMemoDetail이 단건을 조회한다', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: { memo: memoFixture } })
 
-    const { result } = renderHook(() => useMemo('m1'), { wrapper })
+    const { result } = renderHook(() => useMemoDetail('m1'), { wrapper })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(api.get).toHaveBeenCalledWith('/memos/m1')
     expect(result.current.data).toEqual(memoFixture)
   })
 
-  it('useMemo는 id가 없으면 요청하지 않는다', () => {
-    renderHook(() => useMemo(undefined), { wrapper })
+  it('useMemoDetail은 id가 없으면 요청하지 않는다', () => {
+    renderHook(() => useMemoDetail(undefined), { wrapper })
     expect(api.get).not.toHaveBeenCalled()
   })
 

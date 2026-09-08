@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor'
 import {
   useMemos,
-  useMemo as useMemoDetail,
+  useMemoDetail,
   useCreateMemo,
   useUpdateMemo,
   useDeleteMemo,
