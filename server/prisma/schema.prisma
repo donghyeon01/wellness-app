@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  settings  UserSettings?
+  todos     Todo[]
+  events    Event[]
+  memos     Memo[]
+  sessions  PomodoroSession[]
+  diaries   Diary[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSettings {
+  userId    String  @id
+  theme     String  @default("system")
+  pomodoroFocus  Int @default(1500)
+  pomodoroBreak  Int @default(300)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Todo {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  priority    Int      @default(0)
+  dueDate     DateTime?
+  completed   Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, completed])
+  @@index([userId, dueDate])
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  start       DateTime
+  end         DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, start])
+}
+
+model Memo {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  category  String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, category])
+}
+
+model PomodoroSession {
+  id          String   @id @default(cuid())
+  userId      String
+  duration    Int
+  type        String
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+}
+
+model Diary {
+  id        String   @id @default(cuid())
+  userId    String
+  mood      String
+  content   String
+  date      DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
