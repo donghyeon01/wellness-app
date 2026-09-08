@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
+import type { Mock } from 'vitest'
 import http from 'node:http'
+import type { Express } from 'express'
 import { createApp } from '@/app'
 import { prisma } from '@/lib/prisma'
+import { MemorySessionStore } from '@/sessions/memory'
 import { TestClient, startServer } from './helpers'
 
 vi.mock('@/lib/prisma', () => ({
@@ -13,23 +16,49 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-let app: any
+interface TestUser {
+  id: string
+  email: string
+  password: string
+  name: string
+}
+
+interface FindUniqueArgs {
+  where: { id?: string; email?: string }
+}
+
+interface CreateArgs {
+  data: { email: string; password: string; name: string }
+}
+
+interface UserBody {
+  user: { id: string; email: string; name: string }
+}
+
+interface CsrfBody {
+  csrfToken: string
+}
+
+let app: Express
 let server: http.Server
 let port: number
 
 function setupPrisma() {
-  const users: any[] = []
-  ;(prisma.user.create as any).mockImplementation(async ({ data }: any) => {
+  const users: TestUser[] = []
+  ;(prisma.user.create as unknown as Mock).mockImplementation(async (args: CreateArgs) => {
     const id = `u${users.length + 1}`
-    const user = { id, ...data }
+    const user: TestUser = { id, ...args.data }
     users.push(user)
-    return { ...user }
+    return { id: user.id, email: user.email, name: user.name }
   })
-  ;(prisma.user.findUnique as any).mockImplementation(async ({ where }: any) => {
-    if (where?.id) return users.find((u) => u.id === where.id) ?? null
-    if (where?.email) return users.find((u) => u.email === where.email) ?? null
-    return null
-  })
+  ;(prisma.user.findUnique as unknown as Mock).mockImplementation(
+    async (args: FindUniqueArgs) => {
+      const { where } = args
+      if (where.id) return users.find((u) => u.id === where.id) ?? null
+      if (where.email) return users.find((u) => u.email === where.email) ?? null
+      return null
+    },
+  )
 }
 
 beforeAll(async () => {
@@ -45,7 +74,7 @@ afterAll(() => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  ;(app.locals.sessionStore as any).clear()
+  ;(app.locals.sessionStore as MemorySessionStore).clear()
   setupPrisma()
 })
 
@@ -54,7 +83,7 @@ describe('/api/auth', () => {
     const client = new TestClient(port)
     const res = await client.request('GET', '/api/auth/csrf-token')
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = (await res.json()) as CsrfBody
     client.parseCookies(res)
     expect(client.cookies['sid']).toBeDefined()
     expect(client.cookies['csrf-token']).toBe(body.csrfToken)
@@ -93,13 +122,13 @@ describe('/api/auth', () => {
       name: 'Alice',
     })
     expect(res.status).toBe(201)
-    const body = await res.json()
+    const body = (await res.json()) as UserBody
     expect(body.user.email).toBe('a@b.com')
     client.parseCookies(res)
 
     const meRes = await client.request('GET', '/api/auth/me')
     expect(meRes.status).toBe(200)
-    const me = await meRes.json()
+    const me = (await meRes.json()) as UserBody
     expect(me.user.email).toBe('a@b.com')
   })
 
@@ -139,7 +168,7 @@ describe('/api/auth', () => {
       password: 'Password1',
     })
     expect(res.status).toBe(200)
-    const body = await res.json()
+    const body = (await res.json()) as UserBody
     expect(body.user.email).toBe('a@b.com')
     client.parseCookies(res)
 

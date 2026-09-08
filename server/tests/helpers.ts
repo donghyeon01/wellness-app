@@ -10,30 +10,26 @@ export class TestClient {
     this.baseUrl = `http://127.0.0.1:${port}`
   }
 
-  parseCookies(res: any): void {
+  parseCookies(res: Response): void {
     const raw: string[] = res.headers.getSetCookie?.() ?? []
     for (const header of raw) {
       const [pair] = header.split(';')
       const [name, ...rest] = pair.split('=')
       const value = rest.join('=').trim()
       const key = name.trim()
-      if (value === '') {
-        this.cookies[key] = null
-      } else {
-        this.cookies[key] = decodeURIComponent(value)
-      }
+      this.cookies[key] = value === '' ? null : decodeURIComponent(value)
     }
-    this.csrfToken = (this.cookies['csrf-token'] as string | null) ?? undefined
+    this.csrfToken = this.cookies['csrf-token'] ?? undefined
   }
 
   cookieHeader(): string {
     return Object.entries(this.cookies)
-      .filter(([, v]) => v !== null)
-      .map(([k, v]) => `${k}=${encodeURIComponent(v as string)}`)
+      .filter((entry): entry is [string, string] => entry[1] !== null)
+      .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
       .join('; ')
   }
 
-  async request(method: string, path: string, body?: unknown): Promise<any> {
+  async request(method: string, path: string, body?: unknown): Promise<Response> {
     const headers: Record<string, string> = {}
     if (method !== 'GET' && this.csrfToken) {
       headers['X-CSRF-Token'] = this.csrfToken
