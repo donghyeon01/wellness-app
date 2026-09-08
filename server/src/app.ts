@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser'
 import { authMiddleware } from '@/middleware/auth'
 import { csrfMiddleware } from '@/middleware/csrf'
 import authRoutes from '@/routes/auth'
+import eventRoutes from '@/routes/events'
 import { MemorySessionStore } from '@/sessions/memory'
 import { SessionStore } from '@/sessions/store'
 
@@ -18,6 +19,7 @@ export function createApp(sessionStore: SessionStore = new MemorySessionStore())
   app.use(authMiddleware)
   app.use(csrfMiddleware)
   app.use('/api/auth', authRoutes)
+  app.use('/api/events', eventRoutes)
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
   return app
 }

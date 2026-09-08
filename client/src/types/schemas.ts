@@ -24,6 +24,35 @@ export const userSchema = z.object({
   name: z.string(),
 })
 
+export const eventSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  start: z.string(),
+  end: z.string(),
+})
+
+// 캘린더 이벤트 폼 입력 검증 — 서버와 동일하게 start < end를 강제한다.
+export const eventFormSchema = z
+  .object({
+    title: z
+      .string()
+      .min(1, '제목을 입력하세요.')
+      .max(200, '제목은 200자 이하로 입력하세요.'),
+    description: z
+      .string()
+      .max(2000, '설명은 2000자 이하로 입력하세요.')
+      .optional(),
+    start: z.string().min(1, '시작 시각을 입력하세요.'),
+    end: z.string().min(1, '종료 시각을 입력하세요.'),
+  })
+  .refine((v) => new Date(v.start).getTime() < new Date(v.end).getTime(), {
+    message: '종료 시각은 시작 시각보다 뒤여야 합니다.',
+    path: ['end'],
+  })
+
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type User = z.infer<typeof userSchema>
+export type CalendarEvent = z.infer<typeof eventSchema>
+export type EventFormInput = z.infer<typeof eventFormSchema>
