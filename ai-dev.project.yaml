@@ -1,0 +1,33 @@
+schema_version: 1
+name: wellness-app
+base_branch: main
+merge_policy: auto
+verify:
+  commands:
+    - npm ci
+    - npm run build
+    - npm run lint
+    - npm run typecheck
+    - npm test -- --run
+  timeout_sec: 600
+  allowed_commands:
+    - npm
+    - npx
+    - pnpm
+    - node
+forbidden_paths:
+  - .env*
+  - .devin/**
+  - .github/**
+  - ai-dev.project.yaml
+  - "**/*.pem"
+  - "**/*.key"
+skills_default:
+  - testing
+context:
+  architecture_note: 10_PROJECTS/wellness-app/architecture/ARCH.md
+  include_paths:
+    - src/**
+    - tests/**
+    - package.json
+    - README.md

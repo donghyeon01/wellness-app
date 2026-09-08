@@ -25,6 +25,15 @@
 7. 대시보드
 8. 다크/라이트 테마
 
+## 문서
+
+- [요구사항 명세](docs/requirements.md)
+- [아키텍처 설계](docs/architecture.md)
+- [인증 및 보안](docs/auth-security.md)
+- [데이터 모델](docs/data-model.md)
+- [로드맵](docs/roadmap.md)
+- [AI DEV OS 구현 지시](docs/ai-dev-request.md)
+
 ## 확장 계획
 
 - **Phase 2**: 카카오톡 로그인, 휴대폰 인증, 친구 추가, 일정/일기 공유, 채팅, BGM, 커스텀 테마, 쉬움 모드, PWA
