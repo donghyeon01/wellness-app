@@ -127,6 +127,9 @@ export async function getPomodoroStats(
     },
   })
 
-  const totalSeconds = sessions.reduce((sum, session) => sum + session.duration, 0)
+  const totalSeconds = sessions.reduce(
+    (sum: number, session: { duration: number }) => sum + session.duration,
+    0,
+  )
   return { totalSeconds, count: sessions.length }
 }
