@@ -24,6 +24,14 @@ export const userSchema = z.object({
   name: z.string(),
 })
 
+export const themeSchema = z.enum(['light', 'dark', 'system'])
+
+export const settingsSchema = z.object({
+  theme: themeSchema,
+})
+
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type User = z.infer<typeof userSchema>
+export type Theme = z.infer<typeof themeSchema>
+export type Settings = z.infer<typeof settingsSchema>
