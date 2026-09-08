@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Login from '@/pages/Login'
 import Register from '@/pages/Register'
 import Profile from '@/pages/Profile'
+import Pomodoro from '@/pages/Pomodoro'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
 const queryClient = new QueryClient()
@@ -30,6 +31,14 @@ function App() {
                   <h1 className="text-3xl font-bold text-foreground">Wellness App</h1>
                   <p className="text-muted-foreground">Phase 1 MVP 대시보드</p>
                 </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pomodoro"
+            element={
+              <ProtectedRoute>
+                <Pomodoro />
               </ProtectedRoute>
             }
           />

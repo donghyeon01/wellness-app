@@ -24,6 +24,29 @@ export const userSchema = z.object({
   name: z.string(),
 })
 
+export const pomodoroModeSchema = z.enum(['focus', 'break'])
+
+export const pomodoroSessionSchema = z.object({
+  id: z.string(),
+  duration: z.number().int().positive(),
+  type: pomodoroModeSchema,
+  completedAt: z.string().datetime(),
+})
+
+export const pomodoroSessionInputSchema = z.object({
+  duration: z.number().int().positive().optional(),
+  type: pomodoroModeSchema,
+})
+
+export const pomodoroStatsSchema = z.object({
+  totalSeconds: z.number().int(),
+  count: z.number().int(),
+})
+
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type User = z.infer<typeof userSchema>
+export type PomodoroMode = z.infer<typeof pomodoroModeSchema>
+export type PomodoroSession = z.infer<typeof pomodoroSessionSchema>
+export type PomodoroSessionInput = z.infer<typeof pomodoroSessionInputSchema>
+export type PomodoroStats = z.infer<typeof pomodoroStatsSchema>
