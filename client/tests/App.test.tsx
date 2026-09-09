@@ -10,6 +10,11 @@ vi.mock('@/api/auth', () => ({
   useLogout: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
+// Memos 페이지가 import되므로 무거운 에디터 모듈은 대체한다.
+vi.mock('@uiw/react-md-editor', () => ({
+  default: () => null,
+}))
+
 const queryClient = new QueryClient()
 
 function wrapper({ children }: { children: React.ReactNode }) {

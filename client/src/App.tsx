@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
+import Memos from "@/pages/Memos";
 import Calendar from "@/pages/Calendar";
 import Todos from "@/pages/Todos";
 import Diary from "@/pages/Diary";
@@ -30,6 +31,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/memos"
+            element={
+              <ProtectedRoute>
+                <Memos />
               </ProtectedRoute>
             }
           />

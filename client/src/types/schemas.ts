@@ -27,6 +27,31 @@ export const userSchema = z.object({
   name: z.string(),
 });
 
+export const memoSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  content: z.string(),
+  category: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const memoInputSchema = z.object({
+  title: z
+    .string()
+    .min(1, "제목을 입력하세요.")
+    .max(200, "제목은 200자 이하로 입력하세요."),
+  content: z.string().max(100_000, "내용은 100,000자 이하로 입력하세요."),
+  category: z.string().max(50, "카테고리는 50자 이하로 입력하세요.").optional(),
+});
+
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+export type User = z.infer<typeof userSchema>;
+export type Memo = z.infer<typeof memoSchema>;
+export type MemoInput = z.infer<typeof memoInputSchema>;
+
 export const eventSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -35,7 +60,6 @@ export const eventSchema = z.object({
   end: z.string(),
 });
 
-// 캘린더 이벤트 폼 입력 검증 — 서버와 동일하게 start < end를 강제한다.
 export const eventFormSchema = z
   .object({
     title: z
@@ -54,9 +78,6 @@ export const eventFormSchema = z
     path: ["end"],
   });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
-export type User = z.infer<typeof userSchema>;
 export type CalendarEvent = z.infer<typeof eventSchema>;
 export type EventFormInput = z.infer<typeof eventFormSchema>;
 
