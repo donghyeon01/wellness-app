@@ -27,6 +27,25 @@ export const userSchema = z.object({
   name: z.string(),
 });
 
+export const pomodoroModeSchema = z.enum(["focus", "break"]);
+
+export const pomodoroSessionSchema = z.object({
+  id: z.string(),
+  duration: z.number().int().positive(),
+  type: pomodoroModeSchema,
+  completedAt: z.string().datetime(),
+});
+
+export const pomodoroSessionInputSchema = z.object({
+  duration: z.number().int().positive().optional(),
+  type: pomodoroModeSchema,
+});
+
+export const pomodoroStatsSchema = z.object({
+  totalSeconds: z.number().int(),
+  count: z.number().int(),
+});
+
 export const memoSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -45,12 +64,6 @@ export const memoInputSchema = z.object({
   content: z.string().max(100_000, "내용은 100,000자 이하로 입력하세요."),
   category: z.string().max(50, "카테고리는 50자 이하로 입력하세요.").optional(),
 });
-
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
-export type User = z.infer<typeof userSchema>;
-export type Memo = z.infer<typeof memoSchema>;
-export type MemoInput = z.infer<typeof memoInputSchema>;
 
 export const eventSchema = z.object({
   id: z.string(),
@@ -77,9 +90,6 @@ export const eventFormSchema = z
     message: "종료 시각은 시작 시각보다 뒤여야 합니다.",
     path: ["end"],
   });
-
-export type CalendarEvent = z.infer<typeof eventSchema>;
-export type EventFormInput = z.infer<typeof eventFormSchema>;
 
 export const todoSchema = z.object({
   id: z.string(),
@@ -135,18 +145,11 @@ export const todoFiltersSchema = z.object({
   priority: z.enum(["all", "0", "1", "2"]).default("all"),
 });
 
-export type Todo = z.infer<typeof todoSchema>;
-export type TodoInput = z.infer<typeof todoInputSchema>;
-export type TodoUpdateInput = z.infer<typeof todoUpdateSchema>;
-export type TodoFilters = z.infer<typeof todoFiltersSchema>;
-
 export const MOODS = ["happy", "neutral", "sad", "angry", "anxious"] as const;
 
 export const moodSchema = z.enum(MOODS, {
   message: "감정은 happy, neutral, sad, angry, anxious 중 하나여야 합니다.",
 });
-
-export type Mood = z.infer<typeof moodSchema>;
 
 export const diaryDateSchema = z
   .string()
@@ -181,6 +184,22 @@ export const diarySchema = z.object({
   updatedAt: z.string(),
 });
 
+export type RegisterInput = z.infer<typeof registerSchema>;
+export type LoginInput = z.infer<typeof loginSchema>;
+export type User = z.infer<typeof userSchema>;
+export type PomodoroMode = z.infer<typeof pomodoroModeSchema>;
+export type PomodoroSession = z.infer<typeof pomodoroSessionSchema>;
+export type PomodoroSessionInput = z.infer<typeof pomodoroSessionInputSchema>;
+export type PomodoroStats = z.infer<typeof pomodoroStatsSchema>;
+export type Memo = z.infer<typeof memoSchema>;
+export type MemoInput = z.infer<typeof memoInputSchema>;
+export type CalendarEvent = z.infer<typeof eventSchema>;
+export type EventFormInput = z.infer<typeof eventFormSchema>;
+export type Todo = z.infer<typeof todoSchema>;
+export type TodoInput = z.infer<typeof todoInputSchema>;
+export type TodoUpdateInput = z.infer<typeof todoUpdateSchema>;
+export type TodoFilters = z.infer<typeof todoFiltersSchema>;
+export type Mood = z.infer<typeof moodSchema>;
 export type Diary = z.infer<typeof diarySchema>;
 export type DiaryCreateInput = z.infer<typeof diaryCreateSchema>;
 export type DiaryUpdateInput = z.infer<typeof diaryUpdateSchema>;

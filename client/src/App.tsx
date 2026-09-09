@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Profile from "@/pages/Profile";
+import Pomodoro from "@/pages/Pomodoro";
 import Memos from "@/pages/Memos";
 import Calendar from "@/pages/Calendar";
 import Todos from "@/pages/Todos";
@@ -68,6 +69,14 @@ function App() {
                   </h1>
                   <p className="text-muted-foreground">Phase 1 MVP 대시보드</p>
                 </div>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pomodoro"
+            element={
+              <ProtectedRoute>
+                <Pomodoro />
               </ProtectedRoute>
             }
           />
