@@ -2,8 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/axios'
 import type { Todo, TodoInput, TodoUpdateInput, TodoFilters } from '@/types/schemas'
 
+// 목록과 단건 모두 'todos' 키 접두사를 공유해 invalidate 시 함께 갱신되도록 한다.
 const LIST_KEY = 'todos' as const
-const DETAIL_KEY = 'todo' as const
 
 /**
  * 본인 TODO 목록을 completed/priority 필터로 조회한다.
@@ -28,7 +28,7 @@ export function useTodos(filters: TodoFilters = { completed: 'all', priority: 'a
  */
 export function useTodo(id: string) {
   return useQuery({
-    queryKey: [DETAIL_KEY, id],
+    queryKey: [LIST_KEY, id],
     queryFn: async () => {
       const { data } = await api.get<{ todo: Todo }>(`/todos/${id}`)
       return data.todo
@@ -72,7 +72,7 @@ export function useUpdateTodo() {
     },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: [LIST_KEY] })
-      queryClient.invalidateQueries({ queryKey: [DETAIL_KEY, id] })
+      queryClient.invalidateQueries({ queryKey: [LIST_KEY, id] })
     },
   })
 }
