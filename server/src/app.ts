@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { authMiddleware } from "@/middleware/auth";
 import { csrfMiddleware } from "@/middleware/csrf";
 import authRoutes from "@/routes/auth";
+import eventRoutes from "@/routes/events";
 import todoRoutes from "@/routes/todos";
 import diaryRoutes from "@/routes/diary";
 import { MemorySessionStore } from "@/sessions/memory";
@@ -22,6 +23,7 @@ export function createApp(
   app.use(authMiddleware);
   app.use(csrfMiddleware);
   app.use("/api/auth", authRoutes);
+  app.use("/api/events", eventRoutes);
   app.use("/api/todos", todoRoutes);
   app.use("/api/diaries", diaryRoutes);
   app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
