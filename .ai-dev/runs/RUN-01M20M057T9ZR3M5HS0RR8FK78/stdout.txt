@@ -1,0 +1,279 @@
+안녕하세요, AI DEV OS 플래너 역할로 동작합니다. 요청하신 문서들을 먼저 읽고 Phase 1 MVP 구현을 위한 task 그래프를 작성하겠습니다.문서를 모두 읽었습니다. Phase 1 MVP만 구현하는 task 그래프를 작성합니다. 확장 기능은 인터페이스/경계만 남기고 실제 구현은 범위에서 제외했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "requirement": {
+    "summary": "wellness-app의 Phase 1 MVP만 구현: React+Vite+shadcn/ui 클라이언트, Express+Prisma+SQLite 백엔드, 이메일/비밀번호 인증, TODO, 캘린더, 메모, 뽀모도로, 일기, 대시보드, 다크/라이트 테마. Phase 2/3 확장 기능은 실제 구현 없이 인터페이스만 확장 가능하게 유지하며 문서에 명시된 기술 스택과 아키텍처를 따르도록 분해.",
+    "assumptions": [
+      "npm을 패키지 매니저로 사용하고 client, server, 루트(package.json)에 별도 스크립트를 둔다.",
+      "의존성 추가 필요: React 18, Vite, TypeScript, Tailwind CSS, shadcn/ui(Vite 호환 수동 설정), react-router-dom, Zustand, @tanstack/react-query, axios, @uiw/react-md-editor, react-big-calendar, lucide-react, clsx, tailwind-merge, class-variance-authority, @radix-ui/react-*",
+      "의존성 추가 필요: Express, @types/express, TypeScript, tsx/ts-node, Argon2, Zod, Prisma, @prisma/client, cookie-parser, cors, dotenv",
+      "의존성 추가 필요: Vitest(또는 동등한 test runner)로 `npm test -- --run` 통과",
+      "SQLite 개발 DB 사용, DATABASE_URL은 .env에 설정하고 .env는 커밋하지 않는다.",
+      "세션 저장소는 메모리 Map 구현만 하고 Redis 전환을 위한 SessionStore 인터페이스는 정의만 한다.",
+      "CSRF는 architecture.md의 커스텀 세션 기반 방식으로 구현하며, requirements.md의 `csrf-csrf` 언급은 Phase 2 교체 후보로 간주한다.",
+      "shadcn/ui는 Vite 프로젝트에 수동 초기화(components.json, cn 유틸, Tailwind `darkMode: 'class'`) 한다.",
+      "Phase 2/3 기능은 실제 구현 없이 확장 가능한 인터페이스(AuthProvider, SessionStore)만 남긴다.",
+      "루트 package.json은 AI DEV OS 검증 스크립트(`npm ci`, `build`, `lint`, `typecheck`, `test`)를 client/server에 위임하도록 구성한다.",
+      "Prisma SQLite에서 `@db.Date`가 지원된다고 가정; 지원되지 않으면 `Diary.date`의 `@db.Date` 어노테이션만 제거한다."
+    ],
+    "out_of_scope": [
+      "카카오톡 OAuth 2.0, 휴대폰 SMS 인증, 2FA/TOTP",
+      "친구 추가/공유/ACL, 채팅/WebSocket, BGM",
+      "커스텀 테마, 쉬움 모드, PWA, Service Worker",
+      "Pixi.js 개인 Room, Tauri 데스크탑 앱, Capacitor 모바일 앱",
+      "Redis 세션 저장소, PostgreSQL DB 전환",
+      "실시간 협업/공유 기능"
+    ],
+    "open_questions": []
+  },
+  "architecture_notes": "client/server 모노레포 구조로, 클라이언트는 React 18 + Vite + Tailwind + shadcn/ui, 서버는 Express + Prisma + SQLite. 인증은 httpOnly 세션 쿠키 + 세션 기반 CSRF. 상태관리는 Zustand(클라이언트)와 TanStack Query(서버 데이터). 대시보드는 TODO, 뽀모도로, 일기 엔드포인트를 조합. Phase 2/3 확장을 위해 AuthProvider, SessionStore, WebSocket, PWA 경계만 인터페이스/위치로 남김.",
+  "adr_proposals": [
+    {
+      "title": "CSRF 구현 방식: csrf-csrf 패키지 vs 커스텀 세션 기반",
+      "description": "requirements.md는 csrf-csrf 미들웨어를 언급하지만, architecture.md는 server/src/services/auth/csrf.ts와 server/src/middleware/csrf.ts를 직접 정의. Phase 1 MVP에서는 불필요한 외부 의존성 추가 없이 architecture.md의 커스텀 세션 기반 토큰으로 구현하고, csrf-csrf 패키지로의 교체는 Phase 2 이후 보안/유지보수 측면에서 재검토."
+    },
+    {
+      "title": "루트 package.json(workspace) 사용 여부",
+      "description": "docs/architecture.md는 client/server 디렉토리만 명시하지만, ai-dev.project.yaml의 루트 검증 명령(`npm ci`, `npm run build`, `npm run lint`, `npm run typecheck`, `npm test -- --run`)을 만족하려면 루트 package.json이 필요. Phase 1에서 루트 package.json에 client/server 스크립트를 위임하는 방식으로 해결하며, 별도 기능 요구사항은 추가하지 않음."
+    }
+  ],
+  "tasks": [
+    {
+      "key": "T1",
+      "title": "프로젝트 기반 구조 및 개발 환경 구축",
+      "type": "infra",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "client/package.json, server/package.json, 루트 package.json이 생성되고 `npm ci` 성공",
+        "client/vite.config.ts, client/tailwind.config.ts, client/tsconfig.json, server/tsconfig.json 존재",
+        "client/src/main.tsx, client/src/App.tsx, client/src/index.html, server/src/index.ts 존재",
+        "shadcn/ui 초기화: client/components.json, client/src/lib/utils.ts(cn), tailwind.config.ts darkMode: 'class' 설정",
+        "Prisma 초기화: server/prisma/schema.prisma, server/.env.example(DATABASE_URL) 존재",
+        "루트 package.json에 client/server의 build, lint, typecheck, test를 위임하는 scripts 정의"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T2",
+      "title": "Phase 1 MVP Prisma 스키마 및 DB 설정",
+      "type": "infra",
+      "depends_on": [
+        "T1"
+      ],
+      "acceptance_criteria": [
+        "server/prisma/schema.prisma에 User, UserSettings, Todo, Event, Memo, PomodoroSession, Diary 모델 정의",
+        "인덱스/유니크 제약(예: Todo @@index([userId, completed]), Diary @@unique([userId, date])) 포함",
+        "관계 및 onDelete: Cascade, UserSettings userId @id 포함",
+        "`cd server && npx prisma generate` 성공",
+        "`cd server && npx prisma db push` 성공"
+      ],
+      "estimated_size": "S",
+      "priority": 3
+    },
+    {
+      "key": "T3",
+      "title": "백엔드 인증 및 보안(회원가입/로그인/로그아웃/세션/CSRF)",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T2"
+      ],
+      "acceptance_criteria": [
+        "server/src/services/auth/password.ts: Argon2id hash/verify(memoryCost: 19456, timeCost: 2, parallelism: 1) 구현",
+        "server/src/sessions/store.ts 인터페이스 + server/src/sessions/memory.ts 메모리 구현",
+        "server/src/services/auth/csrf.ts + server/src/middleware/csrf.ts: 세션 기반 CSRF 토큰 생성/검증",
+        "server/src/middleware/auth.ts: httpOnly 쿠키(sid) 검증, req.user 설정, touch(sliding expiration)",
+        "server/src/routes/auth.ts: POST /register, POST /login, POST /logout, GET /me, GET /csrf-token",
+        "비밀번호 Zod 검증: 8~128자, 영문+숫자 1자 이상",
+        "인증 없음 401, POST/PUT/DELETE CSRF 누락 403, 로그아웃 시 쿠키 만료 검증"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T4",
+      "title": "프론트엔드 인증(로그인/회원가입, axios, CSRF, 보호 라우트)",
+      "type": "feature",
+      "depends_on": [
+        "T3"
+      ],
+      "acceptance_criteria": [
+        "client/src/lib/axios.ts: withCredentials, baseURL, mutation 요청 시 X-CSRF-Token 헤더 자동 추가",
+        "client/src/lib/csrf.ts: GET /api/auth/csrf-token 호출 및 캐싱",
+        "client/src/pages/Login.tsx, client/src/pages/Register.tsx 생성 및 Zod 폼 검증",
+        "client/src/api/auth.ts: TanStack Query hooks(useLogin, useRegister, useLogout, useMe)",
+        "client/src/stores/auth.ts: Zustand 인증 상태 또는 useAuth 훅",
+        "React Router 보호 라우트: 인증 없을 시 /login 리다이렉트",
+        "회원가입 → 로그인 → /me → 로그아웃 UI 흐름이 동작"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T5",
+      "title": "TODO CRUD (백엔드 + 프론트엔드)",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/todos.ts, server/src/services/todo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+        "Zod 검증: priority 0~2, dueDate 선택, 본인 TODO만 CRUD",
+        "정렬: dueDate 오름차순, 완료 항목 하단",
+        "client/src/pages/Todos.tsx: 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터",
+        "client/src/api/todos.ts: TanStack Query hooks"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T6",
+      "title": "캘린더 이벤트 CRUD (백엔드 + react-big-calendar)",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+        "Zod 검증: start < end, 본인 이벤트만 CRUD",
+        "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+        "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+        "client/src/api/events.ts: TanStack Query hooks"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T7",
+      "title": "메모 마크다운 CRUD (백엔드 + @uiw/react-md-editor)",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/memos.ts, server/src/services/memo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+        "Zod 검증: 본인 메모만 CRUD",
+        "client/src/pages/Memos.tsx: @uiw/react-md-editor 작성+미리보기 분할, 카테고리 필터",
+        "마크다운 HTML 렌더링, 목록/상세/생성/수정/삭제",
+        "client/src/api/memos.ts: TanStack Query hooks"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T8",
+      "title": "일기(감정 상태) CRUD (백엔드 + 프론트엔드)",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/diary.ts, server/src/services/diary.ts: GET/GET :date/POST/PUT/DELETE 구현",
+        "Zod 검증: mood는 happy/neutral/sad/angry/anxious, 동일 userId+date 중복 시 409",
+        "client/src/pages/Diary.tsx: 감정 선택 UI(5종), 날짜별 작성/조회/월간 목록, 수정/삭제",
+        "client/src/api/diary.ts: TanStack Query hooks"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T9",
+      "title": "뽀모도로 타이머 + 세션 기록/통계",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/pomodoro.ts, server/src/services/pomodoro.ts: GET sessions, POST session, GET stats(day/week/month) 구현",
+        "UserSettings의 pomodoroFocus/pomodoroBreak 기본값 사용",
+        "client/src/stores/pomodoro.ts: Zustand 타이머 상태, focus/break 모드, 시작/일시정지/리셋",
+        "client/src/pages/Pomodoro.tsx: 타이머 UI, 집중/휴식 시간 설정, 집중 완료 시 서버에 세션 자동 저장",
+        "client/src/api/pomodoro.ts: TanStack Query hooks"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T10",
+      "title": "대시보드 통합 뷰",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4",
+        "T5",
+        "T8",
+        "T9"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/dashboard.ts, server/src/services/dashboard.ts: 오늘 할 일, 뽀모도로 통계, 최근 3편 일기 조회",
+        "client/src/pages/Dashboard.tsx: 인증된 사용자만 접근, 빈 상태 표시",
+        "오늘(또는 과거) 미완료 TODO 목록, 오늘 집중 시간 합계, 최근 3개 일기 미리보기(mood + content 100자)",
+        "client/src/api/dashboard.ts: TanStack Query hook"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T11",
+      "title": "다크/라이트/시스템 테마",
+      "type": "feature",
+      "depends_on": [
+        "T1",
+        "T3",
+        "T4"
+      ],
+      "acceptance_criteria": [
+        "server/src/routes/settings.ts, server/src/services/settings.ts: GET/PUT 사용자 설정(theme) 구현",
+        "client/src/stores/theme.ts: Zustand theme 상태(light/dark/system), localStorage 동기화",
+        "client/src/components/theme/ThemeProvider.tsx: Tailwind darkMode 'class', html/body에 클래스 적용",
+        "client/src/components/layout/Header.tsx: 테마 토글 버튼",
+        "시스템 모드는 OS 설정 따름, 새로고침 후 테마 유지"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T12",
+      "title": "통합 검증: 빌드, 타입체크, 린트, 테스트",
+      "type": "test",
+      "depends_on": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "T5",
+        "T6",
+        "T7",
+        "T8",
+        "T9",
+        "T10",
+        "T11"
+      ],
+      "acceptance_criteria": [
+        "`cd client && npm run build` 성공",
+        "`cd server && npm run build` 성공",
+        "`npm run lint` (client/server) 통과",
+        "`npm run typecheck` (client/server) 통과",
+        "`cd server && npx prisma generate` 및 `npx prisma db push` 성공",
+        "`npm test -- --run` 통과(실패 테스트 없음)"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    }
+  ]
+}
+```

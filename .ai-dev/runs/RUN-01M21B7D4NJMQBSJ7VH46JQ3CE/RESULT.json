@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T6 캘린더 이벤트 CRUD 완료. server/src/routes/events.ts: GET(?start,?end 겹침 조회)/POST(201)/PUT/DELETE 구현 + Zod 검증(start<end). 본인 이벤트만 CRUD: 미인증 401, 타인 소유 403, 미존재 404. server/src/services/event.ts: listEvents/createEvent/findEventById/findOwnedEvent/updateEvent/deleteEvent (Prisma). client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성/수정 모달, 삭제 확인 모달, HTML5 드래그 앤 드롭 이동·양끝 핸들 리사이즈 후 서버 자동 저장. client/src/api/events.ts: TanStack Query hooks(useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent). 테스트: server/tests/events.test.ts 12개(타인 이벤트 PUT/DELETE 시 403 검증 테스트 포함), client tests/api/events.test.ts 4개, tests/pages/Calendar.test.tsx 9개, tests/lib/event-dnd.test.ts 9개. npm test 통과(client 42개, server 37개). 이전 피드백 반영: server/src/routes/events.ts와 server/src/services/event.ts의 T6 전체 diff(베이스 9d47d06 대비, 7446바이트)를 아래에 gzip+base64로 압축해 포함했다. 평문 diff는 본 응답의 JSON 블록 앞 텍스트에도 전체 게재함.\n\nDIFF_GZIP_BASE64_BEGIN\n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\nDIFF_GZIP_BASE64_END",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts",
+    "client/src/pages/Calendar.tsx",
+    "client/src/api/events.ts",
+    "client/src/lib/event-dnd.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/src/app.ts",
+    "server/prisma/schema.prisma",
+    "client/tests/api/events.test.ts",
+    "client/tests/pages/Calendar.test.tsx",
+    "client/tests/lib/event-dnd.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}

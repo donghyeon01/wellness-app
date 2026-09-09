@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD (백엔드 + 프론트엔드) 구현 완료. 이전 시도에서 이미 구현된 코드를 검토하고, lint 실패 원인이었던 server/tests/todos.test.ts의 미사용 변수 2개(user, laterBody)를 수정했다. 백엔드: server/src/routes/todos.ts에 GET/GET :id/POST/PUT/DELETE 라우트(requireAuth 적용), server/src/services/todo.ts에 Zod 스키마(priority 0~2, dueDate 선택) 및 userId 스코프 CRUD, 정렬(completed asc → dueDate asc nulls last) 구현. app.ts에 /api/todos 라우트 등록 확인. 프론트엔드: client/src/api/todos.ts에 TanStack Query hooks(useTodos, useTodo, useCreateTodo, useUpdateTodo, useDeleteTodo), client/src/pages/Todos.tsx에 목록/생성 폼/수정/삭제/완료 토글/completed·priority 필터 구현, client/src/types/schemas.ts에 Zod 스키마 정의. 테스트: server/tests/todos.test.ts 11개(인증, CRUD, 필터, 정렬, 소유권 격리, priority 검증), client/tests/api/todos.test.ts 6개, client/tests/pages/Todos.test.tsx 4개. 검증: npm run lint 통과, npm run typecheck 통과, npm test 통과(client 30/30, server 36/36).",
+  "changed_files": [
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "server/src/app.ts",
+    "server/tests/todos.test.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "client/src/types/schemas.ts",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck"
+  ],
+  "known_issues": [
+    "루트에 이전 시도의 임시 파일 tmp-zod-test.js가 추적 상태로 남아 있음(삭제 명령이 금지되어 유지). lint/typecheck/test에는 영향 없음."
+  ],
+  "followups": []
+}

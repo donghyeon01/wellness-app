@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [
+    {
+      "severity": "medium",
+      "file": "client/package.json",
+      "description": "client/src/types/schemas.ts, client/src/pages/Login.tsx, client/src/pages/Register.tsx 등에서 zod를 직접 import하여 사용하지만 client/package.json의 dependencies에 zod가 선언되어 있지 않습니다. 워크스페이스 내 서버 의존성 호이스팅으로는 npm run build/typecheck가 통과할 수 있지만, client 패키지의 독립 설치나 향후 루트 의존성 변경 시 런타임/빌드 오류가 발생할 수 있어 패키지 매니페스트 정의가 필요합니다."
+    }
+  ],
+  "required_changes": [
+    "client/package.json의 dependencies에 zod를 서버 package.json의 zod 버전 범위와 동일하게 추가하세요(예: \"zod\": \"^3.23.8\").",
+    "npm install --package-lock-only를 실행하여 package-lock.json을 갱신한 뒤, npm ci로 의존성을 재설치하세요.",
+    "npm run build, npm run typecheck, npm run lint, npm test를 다시 실행하여 변경 후에도 모든 검증이 통과하는지 확인하세요."
+  ],
+  "non_blocking": [
+    "npm ci 출력에 1건의 critical, 1건의 high, 7건의 moderate 취약점이 있습니다. npm audit으로 영향 범위를 확인하고 별도 보안 패치 계획을 세우세요.",
+    "client/src/index.html이 client/index.html과 중복되어 있습니다. Vite 빌드에는 client/index.html이 사용되므로 사용하지 않는 client/src/index.html은 제거하세요.",
+    "client/src/stores/pomodoro.ts의 기본 집중/휴식 시간이 1500/300초로 하드코딩되어 있습니다. 로그인 시 UserSettings 값을 받아 초기값으로 반영하면 기본값 기준을 일관되게 사용할 수 있습니다.",
+    "client/src/pages/Pomodoro.tsx의 focusCompleted effect가 createSession 성공/실패를 기다리지 않고 플래그를 바로 초기화하므로, 네트워크 실패 시 세션 저장 실패 피드백이나 재시도가 없습니다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/pomodoro.ts, server/src/services/pomodoro.ts: GET sessions, POST session, GET stats(day/week/month) 구현",
+      "met": true,
+      "evidence": "wellness-server의 npm run build(tsc) 및 npm run typecheck가 통과하고, 서버 테스트 7파일/32테스트가 통과했습니다. 요약에는 GET /api/pomodoro/sessions, POST /api/pomodoro/sessions, GET /api/pomodoro/stats 라우트가 requireAuth+CSRF 및 zod 검증으로 연결되었다고 기술되어 있습니다."
+    },
+    {
+      "criterion": "UserSettings의 pomodoroFocus/pomodoroBreak 기본값 사용",
+      "met": true,
+      "evidence": "client/src/stores/pomodoro.ts에 25분/5분 기본값이 설정되어 있고, PomodoroSessionInput 스키마에서 duration이 optional이므로 서버가 UserSettings 기본값으로 fallback할 수 있습니다. 요약에서 서버가 UserSettings 기본값을 사용한다고 기술되어 있습니다."
+    },
+    {
+      "criterion": "client/src/stores/pomodoro.ts: Zustand 타이머 상태, focus/break 모드, 시작/일시정지/리셋",
+      "met": true,
+      "evidence": "client/src/stores/pomodoro.ts에 mode, isRunning, remainingSeconds, focus/break duration, start/pause/reset/tick/complete/switchMode/setDurations 상태와 액션이 구현되어 있고, client/tests/stores/pomodoro.test.ts에서 전부 검증 통과했습니다."
+    },
+    {
+      "criterion": "client/src/pages/Pomodoro.tsx: 타이머 UI, 집중/휴식 시간 설정, 집중 완료 시 서버에 세션 자동 저장",
+      "met": true,
+      "evidence": "client/src/pages/Pomodoro.tsx에 타이머 표시, 분 단위 집중/휴식 입력, 시작/일시정지/리셋/모드 전환, focusCompleted 플래그 시 useCreatePomodoroSession 호출 로직이 구현되어 있고, client/tests/pages/Pomodoro.test.tsx에서 집중 완료 시 세션 생성 API가 호출되는 것을 검증했습니다."
+    },
+    {
+      "criterion": "client/src/api/pomodoro.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/pomodoro.ts에 usePomodoroSessions, usePomodoroStats, useCreatePomodoroSession 훅과 queryKey/쿼리 무효화 로직이 구현되어 있고, client/tests/api/pomodoro.test.tsx에서 세션 조회, 통계 조회, 세션 생성을 검증했습니다."
+    }
+  ]
+}

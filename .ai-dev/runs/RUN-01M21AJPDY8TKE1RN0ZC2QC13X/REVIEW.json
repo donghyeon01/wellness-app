@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/package.json에 moment를 명시적 의존성으로 추가하면 transitive 의존성 변경에 더 안전합니다.",
+    "npm audit에서 보고된 9개 의존성 취약점(1 high, 1 critical)은 별도로 점검·패치하는 것을 권장합니다.",
+    "캘린더 조회/뮤테이션 실패 시 사용자에게 에러 메시지를 노출하는 UI 피드백을 추가하면 UX가 개선됩니다.",
+    "client/index.html과 client/src/index.html 중 실제로 사용하지 않는 중복 파일을 정리하면 유지보수성이 좋아집니다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "routes/events.ts에 GET(범위 쿼리), POST, PUT, DELETE 엔드포인트 구현; services/event.ts에 listEvents/createEvent/findEventById/findOwnedEvent/updateEvent/deleteEvent 구현. server tests 7파일 37개 통과."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts eventFormSchema.refine으로 start<end 검증; server에서 create/update 시 Zod refine, findEventById 후 userId 비교로 본인 이벤트만 CRUD, 타인 접근 시 403 반환. server tests에 403 통합 테스트 추가."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "BigCalendar defaultView='month', views=['month'] 설정, EventModal(생성/수정), ConfirmDeleteModal(삭제 확인) 포함. Calendar.test.tsx에서 모달 렌더링/저장/검증 테스트."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "MonthEvent draggable 및 resize 핸들, event-dnd.ts의 applyMove/applyResizeStart/applyResizeEnd, handleDrop에서 useUpdateEvent.mutate로 서버 자동 저장. event-dnd.test.ts에서 이동/리사이즈 로직 검증."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent 훅 구현, queryKey 및 invalidateQueries 캐시 무효화. events.test.ts에서 4개 훅 모두 테스트 통과."
+    }
+  ]
+}

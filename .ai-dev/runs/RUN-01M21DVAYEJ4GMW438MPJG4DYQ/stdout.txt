@@ -1,0 +1,59 @@
+리뷰 결과를 정리한다. diff의 클라이언트 부분은 확인 가능했고, 서버 부분(server/src/routes/memos.ts, server/src/services/memo.ts)은 diff가 truncated되어 직접 확인하지 못했으나 executor 요약과 verifier의 서버 테스트 통과(9개 memos 테스트)가 구현을 뒷받침한다.
+
+주요 발견:
+
+1. **`audit-high.json`이 리포지토리에 커밋됨 (medium)** — npm audit 출력물 339줄이 리포 루트에 그대로 포함됐다. 기능과 무관한 실행 산출물이며, 사용 중인 의존성의 취약점 목록(critical 1개 포함)을 외부에 노출하는 정보성 파일이다. 기능 산출물이 아니므로 제거해야 한다.
+2. `client/src/index.html`이 중복으로 존재 — 실제 엔트리는 `client/index.html`이며 `src/` 아래 복사본은 dead file이다. 비차단 정리 대상.
+3. `MDEditor.Markdown` 렌더링은 @uiw/react-markdown-preview가 기본적으로 HTML을 sanitize하므로 XSS 위험이 낮다. 클라이언트 Zod 검증, CSRF 인터셉터, 캐시 무효화(`['memos']` 프리픽스로 detail까지 커버)는 적절하다.
+4. `useMemos()`가 카테고리 목록용과 필터 결과용으로 중복 호출되며 필터 없을 때 동일 쿼리가 두 번 발생 — 비차단 성능 이슈.
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": ["correctness", "security", "tests", "requirements", "maintainability"],
+  "blocking_issues": [
+    {
+      "severity": "medium",
+      "file": "audit-high.json",
+      "description": "npm audit 실행 결과물(339줄)이 리포지토리 루트에 커밋되었다. 기능과 무관한 실행 산출물이며, 프로젝트가 사용 중인 의존성의 취약점(critical 1개, high 1개 포함)과 버전 정보를 그대로 노출한다. 기능 산출물이 아니므로 커밋에서 제거해야 한다."
+    }
+  ],
+  "required_changes": [
+    "audit-high.json을 커밋에서 제거한다 (`git rm --cached audit-high.json` 후 삭제). 향후 audit 결과를 파일로 남길 경우 .gitignore에 `audit-*.json` 패턴을 추가한다.",
+    "dead file인 client/src/index.html을 삭제한다 (실제 엔트리는 client/index.html)."
+  ],
+  "non_blocking": [
+    "Memos.tsx에서 카테고리 옵션 추출용 useMemos()와 필터 결과용 useMemos(categoryFilter)가 중복 호출된다. 필터가 비어 있으면 동일 쿼리가 두 번 발생하므로, 카테고리 목록은 별도 엔드포인트 또는 단일 쿼리 결과에서 파생하는 것을 검토하라.",
+    "diff가 truncated되어 server/src/routes/memos.ts와 server/src/services/memo.ts를 직접 확인하지 못했다. verifier의 서버 테스트 통과(9개 memos 테스트)와 executor 요약으로 충족을 판단했으나, 병합 전 서버 라우트의 requireAuth 적용과 userId 스코핑을 한 번 더 육안 확인할 것을 권장한다.",
+    "npm audit 결과(critical vitest, high vite 등 9개 취약점)가 dev 의존성 중심이긴 하지만 별도 태스크로 갱신 계획을 세울 것을 권장한다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/memos.ts, server/src/services/memo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "diff에는 truncated로 미포함이나 executor 요약이 5개 라우트 구현과 /api/memos 마운트를 명시하고, verifier의 서버 테스트 34개(memos 9개) 통과로 뒷받침됨"
+    },
+    {
+      "criterion": "Zod 검증: 본인 메모만 CRUD",
+      "met": true,
+      "evidence": "executor 요약에 따르면 memoBodySchema/updateMemoSchema/listQuerySchema로 입력 검증, requireAuth + userId 스코핑으로 타인 메모 404 반환. 서버 테스트 통과로 확인됨"
+    },
+    {
+      "criterion": "client/src/pages/Memos.tsx: @uiw/react-md-editor 작성+미리보기 분할, 카테고리 필터",
+      "met": true,
+      "evidence": "client/src/pages/Memos.tsx에서 MDEditor preview=\"live\"로 작성+미리보기 분할, 카테고리 select 필터 구현 확인"
+    },
+    {
+      "criterion": "마크다운 HTML 렌더링, 목록/상세/생성/수정/삭제",
+      "met": true,
+      "evidence": "MDEditor.Markdown으로 상세 내용 렌더링, 목록/상세/생성/수정/삭제 UI 및 테스트(client/tests/pages/Memos.test.tsx 6개) 통과"
+    },
+    {
+      "criterion": "client/src/api/memos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useMemos/useMemoDetail/useCreateMemo/useUpdateMemo/useDeleteMemo 구현 및 mutation 성공 시 memos 캐시 무효화, hooks 테스트 7개 통과"
+    }
+  ]
+}
+```

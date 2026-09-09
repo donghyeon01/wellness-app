@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "캘린더 이벤트 CRUD 구현과 관련 테스트를 완료했습니다. server/src/routes/events.ts와 server/src/services/event.ts는 GET/POST/PUT/DELETE 엔드포인트와 Zod 기반 start < end 검증, 본인 이벤트 CRUD를 이미 구현하고 있습니다. client/src/pages/Calendar.tsx는 react-big-calendar 월간 뷰, 생성/삭제 모달, HTML5 DnD 기반 드래그 앤 드롭 및 리사이즈, 서버 자동 저장을 구현하고 있습니다. client/src/api/events.ts는 TanStack Query hooks(useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent)를 제공합니다. 서비스 레이어의 Prisma Event 타입 import 오류를 로컬 Event 인터페이스로 대체하여 tsc 타입체크와 빌드를 통과했습니다. client/server 테스트(78개)와 lint, build, typecheck 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/services/event.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck",
+    "npm run build",
+    "npm run lint"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "@prisma/client가 아직 generate되지 않아 서버를 직접 실행하려면 `npx prisma generate` 후 `npx prisma db push`가 필요합니다. 단위 테스트에서는 @/lib/prisma를 mock으로 대체하여 해당 제약이 테스트에 영향을 주지 않습니다."
+  ],
+  "followups": [
+    "Prisma client를 generate하고 SQLite dev.db를 초기화하면 실제 서버를 실행할 수 있습니다.",
+    "Phase 2 기능(소셜/실시간)은 확장 인터페이스만 유지하고 구현하지 않았습니다."
+  ]
+}

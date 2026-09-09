@@ -1,0 +1,41 @@
+TODO CRUD(백엔드 + 프론트엔드) 구현과 테스트 작성을 완료했습니다. 백엔드는 `server/src/services/todo.ts`와 `server/src/routes/todos.ts`에 GET/GET :id/POST/PUT/DELETE, Zod 검증(우선순위 0~2, dueDate 선택, 본인 TODO만 CRUD), dueDate 오름차순 + 완료 항목 하단 정렬을 구현했습니다. 프론트엔드는 `client/src/api/todos.ts`에 TanStack Query hooks, `client/src/pages/Todos.tsx`에 목록/생성/수정/삭제/완료 토글/completed·priority 필터 UI를 구현했고, `client/src/App.tsx`에 `/todos` 경로를 추가했습니다. 테스트 파일도 `server/tests/todos.test.ts`, `client/tests/api/todos.test.ts`, `client/tests/pages/Todos.test.tsx`에 작성했습니다.
+
+다만 현재 worktree에 `node_modules`가 없어 `npm test` 실행 시 `vitest`를 찾지 못해 실패했습니다. `package-lock.json`이 존재하므로 `npm ci`로 의존성 설치 후 검증이 필요합니다. `needs_approval`에 `npm ci`를 기록하고 `status=blocked`로 종료합니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "blocked",
+  "summary": "TODO CRUD 백엔드와 프론트엔드를 구현했다. server/src/services/todo.ts에 Prisma 기반 CRUD 및 Zod 검증(우선순위 0~2, dueDate 선택/유효성)과 본인 TODO만 CRUD하는 서비스를 추가했고, server/src/routes/todos.ts에서 GET/GET :id/POST/PUT/DELETE 엔드포인트를 구현했다. 정렬은 dueDate 오름차순, 완료 항목 하단으로 처리했다. client/src/api/todos.ts에 TanStack Query hooks(useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo)를 작성하고, client/src/pages/Todos.tsx에 목록, 생성/수정 폼, 완료 토글, completed/priority 필터 UI를 구현했다. client/src/App.tsx에 /todos 경로를 연결하고 client/src/types/schemas.ts와 server/src/app.ts도 함께 수정했다. 테스트는 server/tests/todos.test.ts, client/tests/api/todos.test.ts, client/tests/pages/Todos.test.tsx에 작성했다. 다만 현재 worktree에 node_modules가 없어 npm test 실행 시 vitest를 찾을 수 없어 실패했다. package-lock.json이 존재하므로 npm ci로 의존성 설치 후 검증이 필요하다.",
+  "changed_files": [
+    "server/src/services/todo.ts",
+    "server/src/routes/todos.ts",
+    "server/src/app.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/tests/todos.test.ts",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test (실행 시도: vitest 바이너리를 찾을 수 없어 실패)"
+  ],
+  "needs_approval": [
+    {
+      "kind": "dependency",
+      "command": "npm ci",
+      "reason": "현재 worktree에 node_modules가 설치되어 있지 않아 npm test, npm run build, npm run typecheck, npm run lint 등 package.json 스크립트를 실행할 수 없습니다. package-lock.json이 있으므로 npm ci로 의존성을 설치한 후 검증 명령을 다시 실행해야 합니다."
+    }
+  ],
+  "known_issues": [
+    "node_modules 부재로 인해 npm test, npm run build, npm run typecheck, npm run lint를 로컬에서 실행할 수 없음",
+    "검증 프로세스가 npm ci를 수행하면 client/server 양쪽 테스트를 실행할 수 있음"
+  ],
+  "followups": [
+    "npm ci 설치 후 npm test, npm run typecheck, npm run lint 실행",
+    "필요 시 npx prisma db push 또는 npx prisma migrate dev로 개발 DB 초기화"
+  ]
+}
+```

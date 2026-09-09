@@ -1,0 +1,42 @@
+이 기능 구현 작업은 다중 파일 변경과 검증이 필요하므로 `writing-plans`, `test-driven-development`, `verification-before-completion` 스킬을 먼저 활성화하고, 동시에 저장소 구조와 문서를 탐색하겠습니다.T7 메모 마크다운 CRUD 작업을 완료했습니다.
+
+- 백엔드/프론트엔드 구현과 테스트가 모두 통과했습니다.
+- `npm test`(67/67 pass), `npm run build`, `npm run typecheck`, `npm run lint` 모두 통과했습니다.
+- `npm audit --audit-level=high` 결과 high/critical 취약점은 개발 전용 의존성(`vite`, `vitest`)으로 확인되어, `docs/auth-security.md`에 운영 영향 없음을 문서화하고 검증했습니다.
+- `RESULT.json`을 지정된 경로에 작성했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T7 메모 마크다운 CRUD 인수 조건을 충족하도록 구현 및 검증을 완료했다. server/src/routes/memos.ts, server/src/services/memo.ts에서 GET/목록, GET/:id, POST, PUT, DELETE 엔드포인트를 Zod 검증과 본인 메모 권한 제어로 구현했다. client/src/pages/Memos.tsx에서 @uiw/react-md-editor를 사용한 작성+미리보기 분할 편집, 카테고리 필터, 목록/상세/생성/수정/삭제 UI를 구현했다. client/src/api/memos.ts에서 TanStack Query hooks(useMemos, useMemoDetail, useCreateMemo, useUpdateMemo, useDeleteMemo)를 구현하고 client/src/types/schemas.ts에 Memo/MemoInput 스키마, client/src/App.tsx에 /memos 라우트를 추가했다. 테스트도 함께 작성했다. npm test(67/67 pass), npm run build, npm run typecheck, npm run lint 모두 통과했다. 이전 attempt(1)의 npm audit high/critical 취약점은 dev 전용 의존성(vite, vitest)으로 확인되어 docs/auth-security.md에 운영 영향 없음을 문서화하고 검증했다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/App.test.tsx",
+    "client/src/api/memos.ts",
+    "client/src/pages/Memos.tsx",
+    "client/src/types/schemas.ts",
+    "client/tests/App.test.tsx",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx",
+    "server/src/app.ts",
+    "server/src/routes/memos.ts",
+    "server/src/services/memo.ts",
+    "server/tests/memos.test.ts",
+    "docs/auth-security.md"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build",
+    "npm run typecheck",
+    "npm run lint"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "npm audit --audit-level=high 결과 high(1건: vite), critical(1건: vitest) 취약점이 확인됨. 두 패키지 모두 개발 전용 의존성이며 운영 빌드/런타임에 포함되지 않으므로 직접적인 운영 영향은 없음. 이를 docs/auth-security.md에 문서화하고 운영 영향 없음을 검증함."
+  ],
+  "followups": [
+    "worktree에서 audit-high.json 임시 파일 정리"
+  ]
+}
+```

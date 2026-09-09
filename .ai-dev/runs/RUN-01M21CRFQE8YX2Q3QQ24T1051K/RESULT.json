@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD 요구사항을 검토·검증하고 보완했다. 백엔드(server/src/routes/todos.ts, server/src/services/todo.ts)는 GET/GET :id/POST/PUT/DELETE, Zod 검증(priority 0~2, dueDate 선택), 본인 TODO만 CRUD(findFirst {id,userId}), 정렬(completed asc → dueDate asc nulls last)이 이미 구현되어 있음을 docs/requirements.md·architecture.md와 대조해 확인했다. 프론트엔드(client/src/pages/Todos.tsx)의 목록·생성 폼·수정/삭제·완료 토글·completed/priority 필터와 client/src/api/todos.ts의 TanStack Query hooks도 구현 확인. 변경 사항: (1) client/src/api/todos.ts의 단건 쿼리 키를 architecture.md 명세대로 ['todos', id]로 정합화하여 목록 invalidate 시 단건 캐시도 함께 갱신되도록 수정. (2) client/tests/todos.test.tsx 추가 — 목록 렌더링, completed/priority 필터 변경 시 useTodos 인자 검증, 생성 폼 제출·제목 검증 오류, 완료 토글, 수정 모드 진입/제출/취소, 삭제, 빈 목록 메시지 등 10개 테스트. (3) client/tests/todos-api.test.tsx 추가 — useTodos 쿼리 파라미터 변환(completed→true/false, priority), useTodo 단건 호출 및 빈 id 비활성화, create/update/delete 뮤테이션의 API 호출·dueDate ISO 변환·['todos'] 캐시 무효화 등 9개 테스트. server/tests/todos.test.ts는 기존 커밋에 존재하는 통합 테스트(11개)를 확인했고, 실수로 덮어썼던 내용을 HEAD와 바이트 동일하게 복원했다. 검증: npm test 통과(client 12파일 49테스트, server 7파일 36테스트), npm run typecheck -w client 통과.",
+  "changed_files": [
+    "client/src/api/todos.ts",
+    "client/tests/todos.test.tsx",
+    "client/tests/todos-api.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck -w client"
+  ],
+  "known_issues": [
+    "client/tests/todos.test.tsx 및 client/tests/todos-api.test.tsx는 기존 client/tests/pages/Todos.test.tsx·client/tests/api/todos.test.ts와 일부 커버리지가 중복되지만, 생성/수정/삭제/토글 상호작용과 캐시 무효화·쿼리 파라미터 변환 등 기존 테스트가 다루지 않는 경로를 추가로 검증한다.",
+    "저장소 루트에 이전 작업의 잔여 파일로 보이는 tmp-zod-test.js가 남아 있다(이번 작업 범위 외, 삭제 명령 금지로 그대로 둠)."
+  ],
+  "followups": [
+    "필요 시 client/tests 하위의 TODO 테스트 파일을 기존 pages/, api/ 디렉터리 구조로 통합 정리"
+  ]
+}

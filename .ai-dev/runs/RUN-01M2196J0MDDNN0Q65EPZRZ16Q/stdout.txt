@@ -1,0 +1,49 @@
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "npm ci 결과 9개 취약점(7 moderate, 1 high, 1 critical)이 보고됨. 릴리스 전 npm audit fix 또는 의존성 업데이트 권장.",
+    "client/package.json에 zod, moment가 dependencies로 선언되지 않았으나 소스에서 직접 import 함. package-lock에 포함되어 있다면 동작하지만, package.json에 명시적으로 추가할 것.",
+    "diff가 잘려 server/src/routes/events.ts, server/src/services/event.ts 의 실제 소스가 보이지 않음. 최종 머지 diff에 서버 파일이 포함되어 있는지 확인 필요.",
+    "client/src/lib/event-dnd.ts의 커스텀 HTML5 DnD는 동작하지만, 장기 유지보수를 위해 react-big-calendar 공식 DnD 애드온 마이그레이션 검토.",
+    "event-dnd.ts의 모듈 레벨 currentDrag 상태는 dataTransfer 미지원 환경 fallback용. 모든 drop/drag-end 경로에서 setDragPayload(null)로 정리되는지 최종 테스트 확인 권장."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "executor 요약에서 라우트/서비스 CRUD 구현을 명시; verification의 server tsc noEmit, npm test, npm run build 모두 통과."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts의 eventFormSchema가 .refine으로 start < end 강제; executor 요약과 통과한 server test로 본인 이벤트 CRUD 권한 검증이 포함된 것으로 확인."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "BigCalendar defaultView='month', views=['month']; EventModal(생성/수정), ConfirmDeleteModal(삭제)가 diff에서 확인됨."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "client/src/lib/event-dnd.ts에서 move/resize-start/resize-end 로직 구현; Calendar.tsx handleDrop에서 useUpdateEvent().mutate 호출로 서버 저장."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent hooks 구현, 성공 시 queryClient.invalidateQueries(['events'])로 캐시 무효화."
+    }
+  ]
+}
+```

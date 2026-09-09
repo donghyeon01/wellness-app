@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/src/index.html이 client/index.html과 중복된 유령 파일로 보인다. Vite는 루트 index.html만 사용하므로 삭제를 권장한다.",
+    "ThemeSync에서 QueryClientContext(@tanstack/react-query의 내부 context export)를 직접 useContext로 사용한다. ThemeProvider가 QueryClientProvider 내부에만 쓰이므로 useQueryClient()로 단순화할 수 있다.",
+    "applyThemeClass가 'light' 클래스도 html/body에 추가한다. Tailwind darkMode 'class'는 'dark'만 필요하므로 light 클래스 추가는 불필요하며, 스타일 선택자(.light 등)와 충돌할 여지가 있다.",
+    "npm ci 출력에 취약점 9개(critical 1 포함)가 보고됐다. 이번 diff의 신규 의존성 때문인지 기존 devDependencies 때문인지 확인하고, 별도 태스크로 npm audit 대응을 권장한다.",
+    "서버 측 settings 라우트/서비스와 테스트는 diff가 잘려 리뷰 범위에서 직접 확인하지 못했고, executor 요약과 검증 통과에 근거해 승인했다. 서버 설정 라우트가 인증 미들웨어 뒤에 있는지 후속 확인을 권장한다.",
+    "Header.test의 'system → light' 주석과 실제 토글 순서(THEME_ORDER: light→dark→system) 표현이 혼동될 수 있다. 주석상 'system에서 클릭 시 light'는 THEME_ORDER 기준으로 맞지만 다음 순환 기대값 문서화를 명확히 하면 좋다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/settings.ts, server/src/services/settings.ts: GET/PUT 사용자 설정(theme) 구현",
+      "met": true,
+      "evidence": "diff가 잘려 서버 파일은 미확인이지만 client/src/api/settings.ts가 GET /settings, PUT /settings({ theme })를 호출하고, executor 요약이 Zod 기반 GET/PUT 구현 및 server 30개 테스트 통과를 명시. npm run build/lint/typecheck/test 전체 통과."
+    },
+    {
+      "criterion": "client/src/stores/theme.ts: Zustand theme 상태(light/dark/system), localStorage 동기화",
+      "met": true,
+      "evidence": "useTheme 스토어가 Theme('light'|'dark'|'system') 상태를 가지며 setTheme 시 localStorage(STORAGE_KEY='wellness-theme')에 기록, getInitialTheme이 저장값을 검증 후 복원. tests/stores/theme.test.ts가 동기화를 검증."
+    },
+    {
+      "criterion": "client/src/components/theme/ThemeProvider.tsx: Tailwind darkMode 'class', html/body에 클래스 적용",
+      "met": true,
+      "evidence": "tailwind.config.ts에 darkMode: 'class' 설정. ThemeProvider의 applyThemeClass가 document.documentElement와 document.body 양쪽에 resolved 클래스를 적용. tests/components/theme/ThemeProvider.test.tsx가 html/body 클래스를 검증."
+    },
+    {
+      "criterion": "client/src/components/layout/Header.tsx: 테마 토글 버튼",
+      "met": true,
+      "evidence": "Header에 aria-label='테마 전환' 버튼이 있고 light→dark→system 순환, 아이콘(Sun/Moon/Monitor)과 라벨 표시. tests/components/layout/Header.test.tsx가 토글 동작과 순환을 검증."
+    },
+    {
+      "criterion": "시스템 모드는 OS 설정 따름, 새로고침 후 테마 유지",
+      "met": true,
+      "evidence": "system 모드에서 matchMedia('(prefers-color-scheme: dark)') 구독 및 change 이벤트 재적용, 구형 Safari addListener 폴백, matchMedia 미지원 시 light 폴백. localStorage 저장 + ThemeSync를 통한 서버 DB 저장으로 재접속/새로고침 후 유지."
+    }
+  ]
+}

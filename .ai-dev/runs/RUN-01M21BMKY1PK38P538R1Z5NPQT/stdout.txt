@@ -1,0 +1,72 @@
+diff가 잘려서 보안 핵심인 서버 측 코드(`routes/events.ts`, `services/event.ts`)가 보이지 않으므로, 작업 공간의 실제 파일을 읽어 소유권 검증과 Zod 검증을 직접 확인하겠습니다. (읽기만 수행 — 수정·명령 실행 없음)작업 공간에 해당 파일이 없으므로 프롬프트 내 정보만으로 판정합니다.
+
+## 리뷰 요약
+
+**확인 가능한 범위(클라이언트)는 양호합니다.** `Calendar.tsx`는 월간 뷰, 생성/수정 모달, 삭제 확인 모달, HTML5 DnD 기반 이동·리사이즈 후 `updateEvent.mutate` 자동 저장을 올바르게 구현했고, `api/events.ts`의 TanStack Query hooks도 기준을 충족합니다. XSS 등 클라이언트 측 보안 문제도 없습니다.
+
+**그러나 보안 핵심 기준을 검증할 수 없습니다.** "본인 이벤트만 CRUD"와 서버 측 Zod 검증은 `server/src/routes/events.ts`·`server/src/services/event.ts`에 있어야 하는데, diff가 잘려 해당 파일이 평문으로 제공되지 않았습니다. gzip+base64 블록은 리뷰어가 감사할 수 없는 형태이며, 이전 피드백에서 이미 평문 게재를 요구받았음에도 압축 형태로 제출됐습니다. 테스트 통과는 사실로 인정하지만, 서버 테스트 파일 자체(`server/tests/events.test.ts`)도 보이지 않아 "본인 소유 검증을 테스트가 실제로 검증하는지" 확인할 수 없습니다. 인가(authorization) 로직은 보지 못한 채 승인할 수 없는 영역입니다.
+
+**추가 실질 결함:** `client/package.json`에 `moment`(Calendar.tsx에서 import)와 `zod`(types/schemas.ts에서 import)가 선언돼 있지 않습니다. npm workspaces hoisting으로 현재는 빌드가 통과하지만, 직접 의존성 미선언은 packaging 결함입니다.
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [
+    {
+      "severity": "high",
+      "file": "server/src/routes/events.ts",
+      "description": "보안 핵심 기준 '본인 이벤트만 CRUD'(401/403/404 인가 로직)와 Zod start<end 검증이 포함된 서버 파일의 diff가 잘려 평문으로 제공되지 않음. gzip+base64 블록은 리뷰 불가능한 형태이며, server/tests/events.test.ts의 실제 검증 내용도 확인 불가. 인가 로직은 직접 확인 없이 승인할 수 없음."
+    },
+    {
+      "severity": "medium",
+      "file": "client/package.json",
+      "description": "client 소스가 직접 import하는 moment(Calendar.tsx, momentLocalizer)와 zod(types/schemas.ts)가 dependencies에 미선언. npm workspaces hoisting으로 우연히 해석되고 있어 독립 설치·빌드 시 깨질 수 있는 packaging 결함."
+    }
+  ],
+  "required_changes": [
+    "server/src/routes/events.ts, server/src/services/event.ts, server/tests/events.test.ts의 diff를 압축·인코딩하지 말고 평문으로 리뷰 입력에 포함할 것. 본인 이벤트만 CRUD(미인증 401/타인 소유 403/미존재 404)와 Zod start<end 검증 로직, 그리고 이를 검증하는 테스트 케이스를 reviewer가 직접 확인할 수 있어야 함.",
+    "client/package.json의 dependencies에 moment과 zod를 추가할 것. 두 패키지 모두 client 소스에서 직접 import되지만 선언돼 있지 않아 workspace hoisting에 의존 중임."
+  ],
+  "non_blocking": [
+    "client/src/index.html은 루트 index.html의 중복 사본(./main.tsx 참조)으로 불필요한 데드 파일 — 제거 권고.",
+    "event-dnd.ts의 모듈 레벨 currentDrag는 dragend/drop 미발생 시 stale 상태로 남아 readDragPayload가 dataTransfer보다 오래된 값을 우선 반환할 수 있음.",
+    "applyResizeEnd가 종료일을 항상 해당일 23:59:59로 고정 — 월간 뷰 기준으로는 합리적이나 의도된 UX인지 확인 권고.",
+    "npm audit 9개 취약점(critical 1 포함) 및 deprecated eslint@8 경고 — 이번 작업 범위 밖이나 추후 정리 권고."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": false,
+      "evidence": "diff 잘림으로 서버 파일 미제공(gzip+base64는 감사 불가). npm test 통과는 확인됐으나 구현 자체를 직접 검증할 수 없음."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": false,
+      "evidence": "서버 측 Zod 스키마와 소유권 검증 코드가 리뷰 입력에 평문으로 존재하지 않아 보안 기준 충족 여부 확인 불가. 클라이언트 측 eventFormSchema의 start<end refine만 확인됨."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "월간 뷰(defaultView='month'), EventModal(create/edit), ConfirmDeleteModal이 diff에서 직접 확인됨."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "MonthEvent의 move/resize-start/resize-end 드래그 + handleDrop에서 applyMove/applyResize 계산 후 updateEvent.mutate(PUT) 호출 확인. event-dnd.ts 단위 테스트도 존재."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent hooks 및 events 쿼리 무효화 확인. tests/api/events.test.ts가 엔드포인트·무효화를 검증."
+    }
+  ]
+}
+```

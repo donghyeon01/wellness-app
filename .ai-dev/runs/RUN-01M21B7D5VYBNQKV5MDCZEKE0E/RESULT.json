@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T11 다크/라이트/시스템 테마 기능을 구현하고 검증했습니다. 서버는 GET/PUT /api/settings으로 사용자 테마 설정을 조회·저장하며, 클라이언트는 Zustand 스토어로 light/dark/system 상태를 localStorage와 동기화하고, ThemeProvider가 Tailwind darkMode 'class' 전략에 따라 html/body 클래스를 적용합니다. Header의 토글 버튼으로 테마를 순환(light→dark→system)할 수 있고, system 모드는 matchMedia를 통해 OS 설정을 따르며 변경을 실시간 반영합니다. 클라이언트 42개, 서버 30개 테스트를 모두 통과했습니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/api/settings.ts",
+    "client/src/components/layout/Header.tsx",
+    "client/src/components/layout/Layout.tsx",
+    "client/src/components/theme/ThemeProvider.tsx",
+    "client/src/stores/theme.ts",
+    "client/src/types/schemas.ts",
+    "client/tests/api/settings.test.ts",
+    "client/tests/components/layout/Header.test.tsx",
+    "client/tests/components/theme/ThemeProvider.test.tsx",
+    "client/tests/stores/theme.test.ts",
+    "server/src/app.ts",
+    "server/src/routes/settings.ts",
+    "server/src/services/settings.ts",
+    "server/tests/settings.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "React Router v6 future flag warnings(v7_startTransition, v7_relativeSplatPath)가 테스트 stderr에 표시되나 기능 및 테스트 통과에 영향을 주지 않습니다."
+  ],
+  "followups": [
+    "React Router v7 마이그레이션 시 future flag를 명시적으로 설정할 것을 권장합니다."
+  ]
+}

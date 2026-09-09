@@ -1,0 +1,39 @@
+T5 TODO CRUD 백엔드·프론트엔드 구현을 완료했습니다.
+
+- 백엔드 `server/src/routes/todos.ts`, `server/src/services/todo.ts`에 GET/GET :id/POST/PUT/DELETE 구현
+- Zod 검증(priority 0~2, dueDate 선택), 본인 TODO만 CRUD, dueDate 오름차순·완료 하단 정렬
+- 프론트엔드 `client/src/pages/Todos.tsx`에 목록/생성 폼/수정/삭제/완료 토글/completed·priority 필터
+- `client/src/api/todos.ts`에 TanStack Query hooks
+- 테스트: `server/tests/todos.test.ts`, `client/tests/api/todos.test.ts`, `client/tests/pages/Todos.test.tsx`
+- 검증: `npm test` 통과(클라이언트 30/30, 서버 36/36), `npm run lint`, `npm run typecheck`, `npm run build` 통과
+- `RESULT.json`을 `wellness-app\.ai-dev\runs\RUN-01M21910RWE5PE8G0PXGC01RT5\RESULT.json`에 작성
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD 백엔드·프론트엔드를 구현하고 검증을 완료했습니다.\n\n- 백엔드: server/src/routes/todos.ts, server/src/services/todo.ts에 GET /api/todos, GET /api/todos/:id, POST /api/todos, PUT /api/todos/:id, DELETE /api/todos/:id 엔드포인트와 서비스를 구현했습니다.\n- Zod 검증: priority는 0~2 범위만 허용, dueDate는 선택(null/undefined/빈 문자열 허용), title/description 길이 제한을 적용했습니다.\n- 본인 TODO만 CRUD: 모든 조회·수정·삭제에서 userId 조건으로 소유자를 확인하고, 다른 사용자의 TODO는 404로 응답합니다.\n- 정렬: Prisma orderBy로 completed 오름차순(완료 항목 하단), dueDate 오름차순(nulls last)을 적용했습니다.\n- 프론트엔드: client/src/api/todos.ts에 useTodos, useTodo, useCreateTodo, useUpdateTodo, useDeleteTodo TanStack Query hooks를 구현했습니다.\n- client/src/pages/Todos.tsx에 TODO 목록, 생성/수정 폼, 완료 토글, 수정/삭제 버튼, completed/active/completed 필터, priority 필터 UI를 구현했습니다.\n- 테스트: server/tests/todos.test.ts, client/tests/api/todos.test.ts, client/tests/pages/Todos.test.tsx를 작성/보강했습니다.\n- 검증: npm test(클라이언트 30개, 서버 36개 통과), npm run lint, npm run typecheck, npm run build 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "server/tests/todos.test.ts",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "known_issues": [
+    "React Router v7 migration 관련 future flag 경고가 테스트 stderr에 출력되나 기능 및 검증 결과에 영향을 주지 않습니다."
+  ],
+  "followups": []
+}
+```

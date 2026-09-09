@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T7 메모 마크다운 CRUD 구현 완료. 백엔드: server/src/routes/memos.ts에 GET /api/memos(카테고리 필터), GET /:id, POST, PUT /:id, DELETE /:id를 requireAuth + Zod 검증으로 구현하고, server/src/services/memo.ts에서 userId 소유자 조건으로 본인 메모만 CRUD(타인 접근 시 404) 처리. app.ts에 /api/memos 라우트 마운트 완료. 프론트엔드: client/src/pages/Memos.tsx에서 @uiw/react-md-editor의 preview='live'(작성+미리보기 분할) 에디터와 MDEditor.Markdown으로 마크다운 HTML 렌더링, 카테고리 필터 셀렉트, 목록/상세/생성/수정/삭제 UI 구현. client/src/api/memos.ts에 TanStack Query hooks(useMemos, useMemoDetail, useCreateMemo, useUpdateMemo, useDeleteMemo) 구현. 이전 시도의 lint 실패 원인인 커스텀 훅 useMemo와 React 내장 useMemo의 이름 충돌(react-hooks/exhaustive-deps 경고 2건)을 useMemoDetail로 리네임하여 해소. 검증: npm run lint 통과, npm run typecheck 통과, npm run build 통과, npm test 통과(클라이언트 10파일 33테스트, 서버 7파일 34테스트).",
+  "changed_files": [
+    "server/src/routes/memos.ts",
+    "server/src/services/memo.ts",
+    "server/src/app.ts",
+    "server/tests/memos.test.ts",
+    "client/src/api/memos.ts",
+    "client/src/pages/Memos.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "Phase 1 MVP TODO CRUD 기능을 구현·보완했다. 서버에서는 /api/todos에 GET/GET :id/POST/PUT/DELETE를 Zod 검증(우선순위 0~2, dueDate 선택), 본인 소유 확인, completed 하단/dueDate 오름차순 정렬, completed/priority 쿼리 필터로 구현했다. 생성 시 completed: false를 명시하여 필터/정렬 테스트가 통과하도록 수정했다. 클라이언트에서는 TanStack Query 기반 todos 훅과 Todos 페이지(목록, 생성/수정 폼, 완료 토글, completed/priority 필터, 수정/삭제)를 구현했으며, 폼의 우선순위 라벨을 '중요도'로 조정해 테스트 라벨 충돌을 해결했다. tests/ 디렉토리에 서버·클라이언트 TODO 테스트가 작성되어 있고, npm test와 npm run build 모두 통과했다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "server/src/app.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx",
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "server/tests/todos.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "React Router v7 future flag 경고(기능에는 영향 없음)",
+    "npm ci 시 allow-scripts 경고(Prisma/argon2 postinstall 허용 필요)"
+  ],
+  "followups": [
+    "React Router v7_startTransition future flag 마이그레이션",
+    "Prisma 클라이언트 postinstall allow-scripts 설정"
+  ]
+}

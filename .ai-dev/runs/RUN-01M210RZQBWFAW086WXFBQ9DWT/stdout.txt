@@ -1,0 +1,53 @@
+시작하겠습니다. 먼저 워크트리의 프로젝트 구조를 파악하고 관련 파일을 읽겠습니다.T11 테마 기능 구현을 완료했습니다. 서버와 클라이언트 모두에 Phase 1 MVP 범위에 맞게 소스 코드와 테스트를 작성했습니다.
+
+- `server/src/routes/settings.ts`, `server/src/services/settings.ts`에서 GET/PUT /api/settings로 사용자 테마를 조회/변경합니다.
+- `client/src/stores/theme.ts`에서 Zustand로 light/dark/system 상태를 관리하고 localStorage와 동기화합니다.
+- `client/src/components/theme/ThemeProvider.tsx`에서 Tailwind `darkMode: 'class'` 방식으로 `html`에 클래스를 적용하고, `prefers-color-scheme` 변경을 감지해 system 모드를 반영합니다.
+- `client/src/components/layout/Header.tsx`에 테마 순환 토글 버튼을 추가했습니다.
+- 관련 API 훅, 스키마 타입, Layout, App.tsx 연동과 단위 테스트를 추가했습니다.
+
+다만 워크트리에 `node_modules`가 설치되어 있지 않아 `npm test`를 실행할 수 없었습니다. 작업 지침상 `패키지 설치`는 허가가 필요한 명령이므로 자동 실행하지 않고 `needs_approval`에 기록했습니다. 의존성 설치 후 `npm test`/`npm run typecheck`/`npm run build`/`npx prisma generate` 등을 실행해 최종 검증이 필요합니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "blocked",
+  "summary": "Phase 1 MVP 테마 기능(다크/라이트/시스템) 구현을 완료했으나, 워크트리에 node_modules가 설치되어 있지 않아 검증 명령(npm test)을 실행할 수 없습니다.\n\n구현 내용:\n- 서버: GET /api/settings, PUT /api/settings 엔드포인트 추가(server/src/routes/settings.ts, server/src/services/settings.ts). theme 값은 'light'/'dark'/'system' 중 하나로 Zod 검증, 없으면 'system' 기본값, upsert로 저장합니다.\n- 클라이언트 상태: Zustand useTheme store(client/src/stores/theme.ts)가 light/dark/system 상태를 관리하고 localStorage('wellness-theme')와 동기화합니다.\n- 테마 적용: ThemeProvider(client/src/components/theme/ThemeProvider.tsx)가 Tailwind darkMode 'class' 방식으로 document.documentElement에 light/dark 클래스를 적용하고, prefers-color-scheme 변경 이벤트를 감지해 system 모드를 실시간 반영합니다.\n- 토글 UI: Header(client/src/components/layout/Header.tsx)에 테마 순환 버튼(시스템→라이트→다크→시스템)을 추가하고, 로그인 상태에서는 PUT /api/settings로 서버에 동기화합니다.\n- 연동: App.tsx에서 ThemeProvider와 Layout(Header 포함)을 보호된 라우트에 적용했습니다.\n- 테스트: server/tests/settings.test.ts, client/tests/stores/theme.test.ts, client/tests/api/settings.test.ts, client/tests/components/theme/ThemeProvider.test.tsx, client/tests/components/layout/Header.test.tsx를 추가했습니다.\n\n차단 사유:\n- 워크트리 루트 및 client/server 디렉토리에 node_modules가 없어 'vitest run'을 찾을 수 없습니다.\n- 금지 항목에 '패키지 설치'가 포함되어 있어 npm install을 자동 실행하지 않았습니다.\n- 종속성 설치 승인 후 npm test, npm run typecheck/build, 필요 시 npx prisma generate를 실행해 최종 검증해야 합니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/stores/theme.ts",
+    "client/src/api/settings.ts",
+    "client/src/components/theme/ThemeProvider.tsx",
+    "client/src/components/layout/Header.tsx",
+    "client/src/components/layout/Layout.tsx",
+    "client/tests/stores/theme.test.ts",
+    "client/tests/api/settings.test.ts",
+    "client/tests/components/theme/ThemeProvider.test.tsx",
+    "client/tests/components/layout/Header.test.tsx",
+    "server/src/app.ts",
+    "server/src/routes/settings.ts",
+    "server/src/services/settings.ts",
+    "server/tests/settings.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [
+    {
+      "kind": "dependency",
+      "command": "npm install",
+      "reason": "워크트리(client, server)에 node_modules가 없어 vitest, typescript, prisma 등 의존성을 해석할 수 없습니다. npm test, npm run typecheck, npm run build 등 Phase 1 MVP 검증을 위해 반드시 필요합니다."
+    }
+  ],
+  "known_issues": [
+    "워크트리에 node_modules가 설치되지 않아 npm test, npm run typecheck, npm run build 실행 불가",
+    "Prisma Client가 생성되지 않은 상태이므로 npx prisma generate, npx prisma db push도 종속성 설치 후 실행 필요"
+  ],
+  "followups": [
+    "npm install 승인 및 실행",
+    "npx prisma generate, npx prisma db push 실행",
+    "npm test, npm run typecheck, npm run build 실행 후 실패 항목 수정"
+  ]
+}
+```

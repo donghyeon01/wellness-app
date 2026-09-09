@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T6 캘린더 이벤트 CRUD를 완료했습니다. server/src/routes/events.ts와 server/src/services/event.ts에 GET/POST/PUT/DELETE, Zod(start<end) 검증, 본인 이벤트만 CRUD 기능이 구현되어 있었으며, 소유하지 않은 이벤트에 대해 403을 반환하도록 소유권 분기를 명확히 하고 server/tests/events.test.ts에 403/404 통합 테스트를 추가했습니다. client/src/pages/Calendar.tsx, client/src/api/events.ts, client/src/lib/event-dnd.ts 등은 react-big-calendar 월간 뷰, 생성/삭제 모달, 드래그 앤 드롭·리사이즈 후 서버 자동 저장, TanStack Query hooks가 이미 구현되어 있어 별도 수정 없이 통과했습니다. npm test, typecheck, lint, build 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "Vite production build 시 react-big-calendar 포함으로 인해 main chunk가 500KB 이상으로 경고가 출력되나, 기능 동작에는 영향이 없습니다.",
+    "React Router v7 관련 future flag warning이 테스트 stderr에 표시되나, 테스트 통과에 영향이 없습니다."
+  ],
+  "followups": [
+    "프론트엔드 번들 청크 분할(manualChunks) 검토"
+  ]
+}

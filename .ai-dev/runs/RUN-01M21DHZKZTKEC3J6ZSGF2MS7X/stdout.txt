@@ -1,0 +1,29 @@
+T6 캘린더 이벤트 CRUD 구현 및 검증이 완료되었습니다.
+
+- [events.ts](file:///C:/Users/s_don/Desktop/Projects/.worktrees/01M20MSWQPWWNJW9BJE83W7MCH/server/src/routes/events.ts), [event.ts](file:///C:/Users/s_don/Desktop/Projects/.worktrees/01M20MSWQPWWNJW9BJE83W7MCH/server/src/services/event.ts), [Calendar.tsx](file:///C:/Users/s_don/Desktop/Projects/.worktrees/01M20MSWQPWWNJW9BJE83W7MCH/client/src/pages/Calendar.tsx), [events.ts](file:///C:/Users/s_don/Desktop/Projects/.worktrees/01M20MSWQPWWNJW9BJE83W7MCH/client/src/api/events.ts) 파일을 확인하고 보완했습니다.
+- 백엔드는 GET/POST/PUT/DELETE, Zod 검증, start < end, 본인 이벤트만 CRUD 가능하도록 처리했습니다.
+- 프론트엔드는 react-big-calendar 월간 뷰, 생성/수정/삭제 모달, 드래그 앤 드롭/리사이즈 자동 저장, TanStack Query 훅을 구현했습니다.
+- 검증 결과: `npm test`(클라이언트 42개, 서버 37개 통과), `npm run build`, `npm run lint`, `npm run typecheck` 모두 통과했습니다.
+- `C:\Users\s_don\Desktop\Projects\wellness-app\.ai-dev\runs\RUN-01M21DHZKZTKEC3J6ZSGF2MS7X\RESULT.json`에 결과를 기록했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T6 캘린더 이벤트 CRUD 구현 및 검증을 완료했습니다. server/src/routes/events.ts와 server/src/services/event.ts에서 GET/POST/PUT/DELETE 엔드포인트를 구현하고, Zod로 start < end를 검증하며 본인 이벤트만 조작할 수 있도록 403/404 응답을 구분했습니다. client/src/pages/Calendar.tsx에서는 react-big-calendar 월간 뷰, 이벤트 생성/수정/삭제 모달, 드래그 앤 드롭 및 리사이즈로 서버에 자동 저장하는 로직을 구현했습니다. client/src/api/events.ts에는 TanStack Query 기반의 useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent 훅을 구현했습니다. 검증 결과: npm test(클라이언트 42개, 서버 37개 테스트 전체 통과), npm run build, npm run lint, npm run typecheck 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build",
+    "npm run lint",
+    "npm run typecheck"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}
+```

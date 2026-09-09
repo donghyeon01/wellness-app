@@ -1,0 +1,65 @@
+diff와 검증 결과를 기준으로 T9 수용 기준을 검토했다.
+
+**판정 요약**
+- 클라이언트 측 산출물(`stores/pomodoro.ts`, `pages/Pomodoro.tsx`, `api/pomodoro.ts`, 스키마, 라우트 등록)이 diff에서 직접 확인됐고, 서버 측(`routes/pomodoro.ts`, `services/pomodoro.ts`)은 diff가 잘렸으나 executor 요약과 검증 결과(서버 pomodoro 테스트 7개 포함 전체 통과, typecheck/lint 통과)로 충족을 확인했다.
+- 집중 완료 → `focusCompleted` → 세션 자동 저장 → 플래그 해제 흐름이 올바르고, break 완료 시에는 저장하지 않도록 분기되어 있다.
+- 보안상 문제(비밀 하드코딩, 인증 우회, 위험한 사이드이펙트)는 발견되지 않았다. CSRF 헤더 부착, `withCredentials`, 보호 라우트 적용이 확인된다.
+
+**비차단 지적**
+- `client/package.json`에 `zod`가 선언되어 있지 않은데 `client/src/types/schemas.ts`에서 사용한다. npm workspaces 호이스팅으로 지금은 통과하지만 phantom dependency다.
+- `App.test.tsx`, `tests/App.test.tsx`의 `queryByRole(...)` + `toBeDefined()` 조합은 요소가 없어도 `null`이 "defined"로 통과해 사실상 검증하지 않는다. `getByRole` 또는 `toBeInTheDocument`가 적절하다.
+- `formatDateQuery`가 `toISOString()` 기반이라 UTC 날짜로 잘려, KST 등 로컬 자정 부근에서 'day' 통계가 하루 어긋날 수 있다.
+- Zustand 스토어가 모듈 싱글톤인데 테스트 간 `focusDuration`/`breakDuration`이 초기화되지 않아 테스트 순서 의존성이 있다(`reset()`은 커스텀 duration을 기본값으로 되돌리지 않음).
+- 집중 완료 시 `createSession` 실패에 대한 재시도/오류 표시가 없어 세션이 조용히 유실될 수 있다.
+- `client/src/index.html`이 루트 `index.html`과 중복으로 존재한다.
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/package.json에 zod 의존성이 선언되어 있지 않음(client/src/types/schemas.ts에서 사용). npm workspaces 호이스팅에 의존하는 phantom dependency이므로 명시적으로 추가 권장",
+    "client/src/App.test.tsx 및 client/tests/App.test.tsx에서 queryByRole + toBeDefined 조합은 요소 미존재(null)여도 통과하는 무의미한 단언. getByRole 또는 jest-dom의 toBeInTheDocument로 교체 권장",
+    "client/src/api/pomodoro.ts의 formatDateQuery가 toISOString(UTC) 기반이라 로컬 자정 부근에서 day/week 통계 기준일이 하루 어긋날 수 있음. 로컬 날짜 포맷 사용 검토",
+    "client/src/stores/pomodoro.ts의 reset()이 focusDuration/breakDuration을 기본값으로 되돌리지 않아 테스트 간 상태 오염 가능. 테스트 beforeEach에서 setDurations으로 기본값 복원하거나 별도 resetAll 액션 추가 권장",
+    "Pomodoro.tsx에서 집중 완료 시 createSession mutation 실패에 대한 오류 표시/재시도가 없어 완료 세션이 조용히 유실될 수 있음",
+    "client/src/index.html이 루트 index.html과 중복 존재(불필요 파일 정리 권장)"
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/pomodoro.ts, server/src/services/pomodoro.ts: GET sessions, POST session, GET stats(day/week/month) 구현",
+      "met": true,
+      "evidence": "diff가 잘려 서버 파일은 직접 확인 불가하나, executor 요약에 GET /sessions(range+date 쿼리), POST /sessions(duration 생략 시 UserSettings 기본값), GET /stats(day/week/month, totalSeconds/count) 구현 및 /api/pomodoro 마운트가 명시되고, 검증에서 서버 pomodoro.test.ts 7개 포함 전체 테스트·typecheck·lint 통과"
+    },
+    {
+      "criterion": "UserSettings의 pomodoroFocus/pomodoroBreak 기본값 사용",
+      "met": true,
+      "evidence": "서버는 getPomodoroDefaults로 UserSettings.pomodoroFocus/pomodoroBreak 조회(없으면 1500/300초), 클라이언트는 stores/pomodoro.ts의 DEFAULT_FOCUS_SECONDS=1500, DEFAULT_BREAK_SECONDS=300을 기본값으로 사용"
+    },
+    {
+      "criterion": "client/src/stores/pomodoro.ts: Zustand 타이머 상태, focus/break 모드, 시작/일시정지/리셋",
+      "met": true,
+      "evidence": "Zustand create 스토어에 mode(focus/break), isRunning, remainingSeconds, start/pause/reset/tick/complete/switchMode/setDurations 구현 확인"
+    },
+    {
+      "criterion": "client/src/pages/Pomodoro.tsx: 타이머 UI, 집중/휴식 시간 설정, 집중 완료 시 서버에 세션 자동 저장",
+      "met": true,
+      "evidence": "타이머 표시(mm:ss), 시작/일시정지/리셋/모드전환 버튼, 집중·휴식 분 입력+적용 UI, focusCompleted 감지 useEffect에서 useCreatePomodoroSession으로 {duration, type:'focus'} 자동 저장 확인. tests/pages/Pomodoro.test.tsx가 완료 시 mutate 호출을 검증"
+    },
+    {
+      "criterion": "client/src/api/pomodoro.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "usePomodoroSessions, usePomodoroStats, useCreatePomodoroSession hooks 구현 및 생성 성공 시 ['pomodoro'] 쿼리 무효화 확인. tests/api/pomodoro.test.tsx로 각 hook 동작 검증"
+    }
+  ]
+}
+```

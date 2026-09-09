@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "캘린더 이벤트 CRUD(T6) 요구사항이 모두 충족되어 있습니다. server/src/routes/events.ts, server/src/services/event.ts에서 GET/POST/PUT/DELETE 엔드포인트와 서비스 로직, Zod 기반 start<end 검증 및 본인 이벤트 소유권 확인이 구현되어 있습니다. client/src/pages/Calendar.tsx에서는 react-big-calendar 월간 뷰, 이벤트 생성/수정 모달, 삭제 확인 모달, HTML5 드래그 앤 드롭/리사이즈 후 서버 자동 저장이 동작합니다. client/src/api/events.ts에는 TanStack Query 기반 hooks(useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent)가 있습니다. client/src/lib/event-dnd.ts에 순수 드래그/리사이즈 로직을 분리하고, client/src/types/schemas.ts와 server/src/types/*에서 Zod 스키마를 공유합니다. 관련 테스트(server/tests/events.test.ts, client/tests/pages/Calendar.test.tsx, client/tests/api/events.test.ts, client/tests/lib/event-dnd.test.ts)를 포함하여 전체 141개 테스트가 통과하고, build/lint/typecheck도 통과했습니다.",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/src/app.ts",
+    "client/src/App.tsx",
+    "client/src/api/events.ts",
+    "client/src/pages/Calendar.tsx",
+    "client/src/lib/event-dnd.ts",
+    "client/src/types/schemas.ts",
+    "server/tests/events.test.ts",
+    "client/tests/api/events.test.ts",
+    "client/tests/lib/event-dnd.test.ts",
+    "client/tests/pages/Calendar.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build",
+    "npm run lint",
+    "npm run typecheck"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "client production build 시 react-big-calendar/moment 포함으로 668KB 단일 청크 경고가 발생하나 빌드는 성공합니다. Phase 2+에서 code splitting으로 최적화 가능합니다.",
+    "React Router v7 future flag 경고가 테스트 stderr에 표시되나 기능에 영향을 주지 않습니다."
+  ],
+  "followups": [
+    "번들 크기 최적화(manualChunks 또는 react-big-calendar 지연 로딩)",
+    "캘린더 드래그 앤 드롭 E2E 테스트(Playwright) 추가"
+  ]
+}

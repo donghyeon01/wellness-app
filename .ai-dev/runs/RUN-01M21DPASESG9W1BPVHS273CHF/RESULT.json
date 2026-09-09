@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T7 메모 마크다운 CRUD 기능이 이미 완전히 구현되어 있음을 확인하고 검증을 통과했다. 백엔드: server/src/routes/memos.ts에 GET /(목록, category 쿼리 필터), GET /:id(단건), POST /(생성, 201), PUT /:id(부분 수정), DELETE /:id 라우트를 구현했고, Zod 스키마(memoBodySchema, updateMemoSchema, listQuerySchema)로 입력을 검증한다. 모든 라우트에 requireAuth를 적용하고 server/src/services/memo.ts의 각 함수가 userId 조건으로 조회/수정/삭제하여 본인 메모만 CRUD 가능하며 타인 메모는 404를 반환한다. app.ts에 /api/memos 라우터를 마운트했다. 프론트엔드: client/src/pages/Memos.tsx에서 @uiw/react-md-editor의 MDEditor(preview=\"live\" 작성+미리보기 분할)로 편집하고 MDEditor.Markdown으로 상세 내용을 HTML 렌더링한다. 카테고리 select 필터, 목록/상세/생성/수정/삭제 UI와 클라이언트 측 Zod 검증(memoInputSchema)을 포함한다. client/src/api/memos.ts에 TanStack Query hooks(useMemos, useMemoDetail, useCreateMemo, useUpdateMemo, useDeleteMemo)를 구현하고 mutation 성공 시 memos 캐시를 무효화한다. App.tsx에 /memos 보호 라우트를 등록했다. 검증: npm test 통과(client 10파일 33테스트, server 7파일 34테스트, memos 관련 server 9개/client hooks 7개/page 6개), npm run typecheck 통과. 이번 세션의 신규 코드 변경은 없으며 기존 커밋된 구현이 acceptance_criteria를 모두 충족함을 확인했다.",
+  "changed_files": [
+    "server/src/routes/memos.ts",
+    "server/src/services/memo.ts",
+    "server/src/app.ts",
+    "server/prisma/schema.prisma",
+    "client/src/pages/Memos.tsx",
+    "client/src/api/memos.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/tests/memos.test.ts",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}

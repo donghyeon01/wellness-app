@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T11 다크/라이트/시스템 테마 기능을 검증 완료했습니다. 서버의 /api/settings GET/PUT, 클라이언트 Zustand theme 상태 및 localStorage 동기화, ThemeProvider를 통한 Tailwind darkMode 'class' 적용, Header 테마 토글 버튼, OS 설정 따르는 system 모드 및 새로고침 유지 모두 구현되어 있으며, npm test와 npm run build 모두 통과했습니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/api/settings.ts",
+    "client/src/components/layout/Header.tsx",
+    "client/src/components/layout/Layout.tsx",
+    "client/src/components/theme/ThemeProvider.tsx",
+    "client/src/stores/theme.ts",
+    "client/src/types/schemas.ts",
+    "client/tests/api/settings.test.ts",
+    "client/tests/components/layout/Header.test.tsx",
+    "client/tests/components/theme/ThemeProvider.test.tsx",
+    "client/tests/stores/theme.test.ts",
+    "server/src/app.ts",
+    "server/src/routes/settings.ts",
+    "server/src/services/settings.ts",
+    "server/tests/settings.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}

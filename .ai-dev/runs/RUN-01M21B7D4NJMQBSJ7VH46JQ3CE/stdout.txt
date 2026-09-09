@@ -1,0 +1,294 @@
+작업 T6(캘린더 이벤트 CRUD)를 시작합니다. 먼저 저장소 구조와 기존 코드를 파악하겠습니다.이전 시도에서 수정된 파일이 남아 있습니다. 현재 상태와 전체 구조를 파악하겠습니다.의존성은 이미 설치되어 있습니다. 이제 서버·클라이언트 소스와 문서를 확인합니다.서버 코드와 테스트가 이미 대부분 구현되어 있습니다(이전 시도 잔여분). 클라이언트 파일들은 이미 커밋되어 있는 것 같습니다. 클라이언트 코드와 나머지 구조를 확인합니다.구현이 거의 완료된 상태입니다(이전 시도의 잔여 수정분). 이전 실패 사유는 ① 서버 두 파일의 전체 diff 미포함, ② 타인 이벤트 PUT/DELETE → 403 테스트 누락이었습니다. 403 테스트는 이미 추가되어 있네요. 이제 diff와 나머지 파일을 확인합니다.이전 시도에서 대부분 구현이 완료되었고, 실패 사유였던 403 테스트도 이미 추가되어 있습니다. 클라이언트 테스트와 설정을 확인한 뒤 검증을 실행합니다.구현과 테스트가 모두 갖춰져 있습니다. 이제 검증 명령 `npm test`를 실행합니다.모든 테스트 통과 (client 42개, server 37개). 이전 실패 사유였던 두 서버 파일의 전체 diff를 생성합니다. T6 작업 범위 전체를 보여주기 위해 pre-T6 베이스(`9d47d06`) 기준으로 생성하겠습니다.diff가 7446바이트로 summary(4000자)를 초과하므로, 지시에 따라 gzip+base64로 압축해 summary에 포함하고 응답 본문에도 전체 diff를 출력합니다.BOM 없이 깨끗하게 다시 생성합니다.b64 문자열이 잘려서 표시됐습니다. 두 부분으로 나누어 읽겠습니다.b64 전체를 확보했습니다. 이제 RESULT.json을 PowerShell로 생성합니다(b64를 파일에서 직접 읽어 전사 오류를 방지).파일은 작성됐지만 콘솔 출력이 깨져 보입니다. 실제 파일 내용이 UTF-8로 올바르게 저장됐는지 확인합니다.파일이 UTF-8로 정상 저장됐습니다(콘솔 표시만 깨진 것). 응답에 포함할 평문 diff를 가져옵니다.RESULT.json의 끝부분과 JSON 유효성을 최종 확인합니다.검증 완료. `npm test` 전체 통과(client 42개, server 37개 — `tests/events.test.ts` 12개 중 타인 이벤트 PUT/DELETE → 403 검증 포함)했고, RESULT.json을 지정 경로에 기록했습니다.
+
+## 작업 내용 요약
+
+- **백엔드**: `server/src/routes/events.ts`에 GET(범위 겹침 조회)/POST(201)/PUT/DELETE 구현, Zod로 `start < end` 검증. 소유권 분리 검사로 미인증 401 / 타인 소유 403 / 미존재 404 반환. `server/src/services/event.ts`에 Prisma 기반 `listEvents`/`createEvent`/`findEventById`/`findOwnedEvent`/`updateEvent`/`deleteEvent` 구현.
+- **프론트엔드**: `client/src/pages/Calendar.tsx`에 react-big-calendar 월간 뷰, 생성/수정 모달, 삭제 확인 모달, HTML5 DnD 이동·양끝 리사이즈 후 `useUpdateEvent`로 서버 자동 저장. `client/src/api/events.ts`에 TanStack Query hooks(`useEvents`/`useCreateEvent`/`useUpdateEvent`/`useDeleteEvent`).
+- **이전 실패 사유 반영**: 타인 이벤트 PUT/DELETE 시 403을 검증하는 통합 테스트(`'타인 이벤트를 PUT/DELETE하면 403'`, `server/tests/events.test.ts:383`)가 테스트 스위트에 포함되어 통과함을 확인.
+
+## 서버 2개 파일 전체 diff (베이스 `9d47d06` 대비, T6 신규 파일 전체)
+
+```diff
+diff --git a/server/src/routes/events.ts b/server/src/routes/events.ts
+new file mode 100644
+index 0000000..ce6a139
+--- /dev/null
++++ b/server/src/routes/events.ts
+@@ -0,0 +1,156 @@
++import { Request, Response, NextFunction, Router } from 'express'
++import { z } from 'zod'
++import { requireAuth } from '@/middleware/auth'
++import * as eventService from '@/services/event'
++
++const router = Router()
++
++router.use(requireAuth)
++
++type AsyncHandler = (req: Request, res: Response, _next: NextFunction) => Promise<void>
++
++function asyncRoute(handler: AsyncHandler) {
++  return (req: Request, res: Response, next: NextFunction) => {
++    handler(req, res, next).catch(next)
++  }
++}
++
++function getUserId(req: Request, res: Response): string | null {
++  const userId = req.user?.id
++  if (!userId) {
++    res.status(401).json({ error: '인증이 필요합니다.' })
++    return null
++  }
++  return userId
++}
++
++const dateValue = z.coerce.date({ invalid_type_error: '날짜 형식이 올바르지 않습니다.' })
++
++const listQuerySchema = z.object({
++  start: dateValue.optional(),
++  end: dateValue.optional(),
++})
++
++const createEventSchema = z
++  .object({
++    title: z
++      .string()
++      .min(1, '제목을 입력하세요.')
++      .max(200, '제목은 200자 이하로 입력하세요.'),
++    description: z
++      .string()
++      .max(2000, '설명은 2000자 이하로 입력하세요.')
++      .nullish(),
++    start: dateValue,
++    end: dateValue,
++  })
++  .refine((d) => d.start < d.end, {
++    message: '종료 시각은 시작 시각보다 뒤여야 합니다.',
++  })
++
++const updateEventSchema = z.object({
++  title: z
++    .string()
++    .min(1, '제목을 입력하세요.')
++    .max(200, '제목은 200자 이하로 입력하세요.')
++    .optional(),
++  description: z
++    .string()
++    .max(2000, '설명은 2000자 이하로 입력하세요.')
++    .nullish(),
++  start: dateValue.optional(),
++  end: dateValue.optional(),
++})
++
++// 월간 조회: ?start, ?end 쿼리로 범위를 지정한다. 없으면 전체 목록.
++router.get(
++  '/',
++  asyncRoute(async (req, res) => {
++    const userId = getUserId(req, res)
++    if (!userId) return
++
++    const parsed = listQuerySchema.safeParse(req.query)
++    if (!parsed.success) {
++      res.status(400).json({ error: parsed.error.errors[0].message })
++      return
++    }
++
++    const events = await eventService.listEvents(userId, parsed.data)
++    res.json({ events })
++  }),
++)
++
++router.post(
++  '/',
++  asyncRoute(async (req, res) => {
++    const userId = getUserId(req, res)
++    if (!userId) return
++
++    const parsed = createEventSchema.safeParse(req.body)
++    if (!parsed.success) {
++      res.status(400).json({ error: parsed.error.errors[0].message })
++      return
++    }
++
++    const event = await eventService.createEvent(userId, parsed.data)
++    res.status(201).json({ event })
++  }),
++)
++
++router.put(
++  '/:id',
++  asyncRoute(async (req, res) => {
++    const userId = getUserId(req, res)
++    if (!userId) return
++
++    // 부분 수정 허용: 변경되지 않은 start/end는 기존 값과 합쳐 start < end를 검증한다.
++    const existing = await eventService.findEventById(req.params.id)
++    if (!existing) {
++      res.status(404).json({ error: '이벤트를 찾을 수 없습니다.' })
++      return
++    }
++    if (existing.userId !== userId) {
++      res.status(403).json({ error: '이벤트에 대한 권한이 없습니다.' })
++      return
++    }
++
++    const parsed = updateEventSchema.safeParse(req.body)
++    if (!parsed.success) {
++      res.status(400).json({ error: parsed.error.errors[0].message })
++      return
++    }
++
++    const mergedStart = parsed.data.start ?? existing.start
++    const mergedEnd = parsed.data.end ?? existing.end
++    if (!(mergedStart < mergedEnd)) {
++      res.status(400).json({ error: '종료 시각은 시작 시각보다 뒤여야 합니다.' })
++      return
++    }
++
++    const event = await eventService.updateEvent(userId, req.params.id, parsed.data)
++    res.json({ event })
++  }),
++)
++
++router.delete(
++  '/:id',
++  asyncRoute(async (req, res) => {
++    const userId = getUserId(req, res)
++    if (!userId) return
++
++    const existing = await eventService.findEventById(req.params.id)
++    if (!existing) {
++      res.status(404).json({ error: '이벤트를 찾을 수 없습니다.' })
++      return
++    }
++    if (existing.userId !== userId) {
++      res.status(403).json({ error: '이벤트에 대한 권한이 없습니다.' })
++      return
++    }
++
++    await eventService.deleteEvent(userId, req.params.id)
++    res.json({ ok: true })
++  }),
++)
++
++export default router
+diff --git a/server/src/services/event.ts b/server/src/services/event.ts
+new file mode 100644
+index 0000000..9e906a3
+--- /dev/null
++++ b/server/src/services/event.ts
+@@ -0,0 +1,85 @@
++import { prisma } from '@/lib/prisma'
++
++export interface Event {
++  id: string
++  userId: string
++  title: string
++  description: string | null
++  start: Date
++  end: Date
++  createdAt: Date
++  updatedAt: Date
++}
++
++export interface EventRange {
++  start?: Date
++  end?: Date
++}
++
++export interface CreateEventData {
++  title: string
++  description?: string | null
++  start: Date
++  end: Date
++}
++
++export interface UpdateEventData {
++  title?: string
++  description?: string | null
++  start?: Date
++  end?: Date
++}
++
++/**
++ * 조회 범위와 시간이 겹치는 본인 이벤트만 반환한다.
++ * 겹침 조건: event.start < range.end AND event.end > range.start
++ */
++export async function listEvents(userId: string, range: EventRange): Promise<Event[]> {
++  return prisma.event.findMany({
++    where: {
++      userId,
++      ...(range.start ? { end: { gt: range.start } } : {}),
++      ...(range.end ? { start: { lt: range.end } } : {}),
++    },
++    orderBy: { start: 'asc' },
++  })
++}
++
++export async function createEvent(userId: string, data: CreateEventData): Promise<Event> {
++  return prisma.event.create({
++    data: {
++      userId,
++      title: data.title,
++      description: data.description ?? null,
++      start: data.start,
++      end: data.end,
++    },
++  })
++}
++
++// 소유권을 함께 검사해 타인의 이벤트 존재 여부를 노출하지 않는다.
++export async function findOwnedEvent(userId: string, id: string): Promise<Event | null> {
++  return prisma.event.findFirst({ where: { id, userId } })
++}
++
++// id로만 조회한다. 라우트에서 존재/소유권을 분리해 처리할 때 사용한다.
++export async function findEventById(id: string): Promise<Event | null> {
++  return prisma.event.findUnique({ where: { id } })
++}
++
++export async function updateEvent(
++  userId: string,
++  id: string,
++  data: UpdateEventData,
++): Promise<Event | null> {
++  const owned = await findOwnedEvent(userId, id)
++  if (!owned) return null
++  return prisma.event.update({ where: { id }, data })
++}
++
++export async function deleteEvent(userId: string, id: string): Promise<boolean> {
++  const owned = await findOwnedEvent(userId, id)
++  if (!owned) return false
++  await prisma.event.delete({ where: { id } })
++  return true
++}
+```
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T6 캘린더 이벤트 CRUD 완료. server/src/routes/events.ts: GET(?start,?end 겹침 조회)/POST(201)/PUT/DELETE 구현 + Zod 검증(start<end). 본인 이벤트만 CRUD: 미인증 401, 타인 소유 403, 미존재 404. server/src/services/event.ts: listEvents/createEvent/findEventById/findOwnedEvent/updateEvent/deleteEvent (Prisma). client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성/수정 모달, 삭제 확인 모달, HTML5 드래그 앤 드롭 이동·양끝 핸들 리사이즈 후 서버 자동 저장. client/src/api/events.ts: TanStack Query hooks(useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent). 테스트: server/tests/events.test.ts 12개(타인 이벤트 PUT/DELETE 시 403 검증 테스트 포함), client tests/api/events.test.ts 4개, tests/pages/Calendar.test.tsx 9개, tests/lib/event-dnd.test.ts 9개. npm test 통과(client 42개, server 37개). 이전 피드백 반영: server/src/routes/events.ts와 server/src/services/event.ts의 T6 전체 diff(베이스 9d47d06 대비, 7446바이트)를 아래에 gzip+base64로 압축해 포함했다. 평문 diff는 본 응답의 JSON 블록 앞 텍스트에도 전체 게재함.\n\nDIFF_GZIP_BASE64_BEGIN\n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\nDIFF_GZIP_BASE64_END",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts",
+    "client/src/pages/Calendar.tsx",
+    "client/src/api/events.ts",
+    "client/src/lib/event-dnd.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/src/app.ts",
+    "server/prisma/schema.prisma",
+    "client/tests/api/events.test.ts",
+    "client/tests/pages/Calendar.test.tsx",
+    "client/tests/lib/event-dnd.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}
+```

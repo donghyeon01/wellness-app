@@ -1,0 +1,205 @@
+요청하신 문서들을 먼저 읽고, Phase 1 MVP 범위를 파악하여 구현 가능한 task 그래프를 작성하겠습니다.문서들을 모두 읽었습니다. README, requirements, architecture, auth-security, data-model, roadmap, ai-dev-request에 명시된 Phase 1 MVP 범위와 기술 스택, 아키텍처, 데이터 모델을 바탕으로 구현 계획을 분해하겠습니다.
+
+Phase 1 MVP는 이메일/비밀번호 인증, TODO, 캘린더, 메모, 뽀모도로, 일기, 대시보드, 테마입니다. Phase 2/3 확장 기능은 실제 구현하지 않고 문서에 제시된 `AuthProvider`, `SessionStore` 인터페이스 등 확장 경계만 남깁니다.
+
+아래는 구현 가능한 task 그래프입니다.
+
+```json
+{
+  "schema_version": 1,
+  "requirement": {
+    "summary": "wellness-app의 Phase 1 MVP(이메일/비밀번호 인증, TODO, 캘린더, 메모, 뽀모도로, 일기, 대시보드, 테마)를 문서에 명시된 기술 스택과 아키텍처에 따라 구현하고, client/server 빌드와 Prisma 마이그레이션, 테스트를 통과시킨다.",
+    "assumptions": [
+      "Phase 2/3 확장 기능은 실제 구현하지 않고 인터페이스/도메인 경계만 확장 가능하게 유지한다",
+      "DB는 개발 환경의 SQLite를 사용하고, Prisma schema는 Phase 1 MVP 모델만 정의한다",
+      "인증은 Session + httpOnly Cookie + CSRF Token 방식을 따른다",
+      "비밀번호 해시는 Argon2id 파라미터(memoryCost:19456, timeCost:2, parallelism:1)를 사용한다",
+      "프론트엔드/백엔드는 client/와 server/ 디렉토리 구조를 따른다",
+      "의존성 추가 필요: argon2, csrf-csrf, @prisma/client, react-big-calendar, @uiw/react-md-editor, zustand, @tanstack/react-query, tailwindcss, clsx, tailwind-merge, shadcn/ui 등",
+      "shadcn/ui는 npx shadcn-ui@latest init 또는 동등한 방식으로 초기화한다",
+      "대시보드는 TODO, 뽀모도로 세션, 일기 데이터를 조합하여 제공한다",
+      "뽀모도로 타이머는 클라이언트 기준으로 동작하고 집중 세션 완료 시 서버에 기록한다",
+      "테마 설정은 UserSettings 모델에 저장하고 localStorage와 동기화한다"
+    ],
+    "out_of_scope": [
+      "카카오톡 OAuth, 휴대폰 SMS 인증, 친구 추가, 일정/일기 공유",
+      "채팅, WebSocket, BGM, PWA, Service Worker",
+      "개인 Room(Pixi.js), 2FA(TOTP), 데스크탑/모바일 앱(Tauri/Capacitor)",
+      "Redis/PostgreSQL 운영 환경 전환",
+      "커스텀 테마, 쉬움 모드 등 Phase 2/3 UI 기능"
+    ],
+    "open_questions": []
+  },
+  "architecture_notes": "Frontend는 React 18 + Vite + TypeScript + Tailwind CSS + shadcn/ui, 상태관리는 Zustand(클라이언트)와 TanStack Query(서버)로 분리한다. Backend는 Express + TypeScript, REST API에 Zod 검증, Prisma ORM, SQLite DB를 사용한다. 인증은 Argon2id 비밀번호 해시, httpOnly 세션 쿠키, CSRF 토큰으로 구성하며, SessionStore 인터페이스를 통해 메모리 저장소를 구현하고 Redis 전환 확장 경계만 유지한다.",
+  "adr_proposals": [],
+  "tasks": [
+    {
+      "key": "T1",
+      "title": "프로젝트 기반 구조 및 공통 의존성 설정",
+      "type": "infra",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "client/와 server/ 디렉토리가 생성되고 package.json, tsconfig.json, .env.example이 존재한다",
+        "client에 Vite + React 18 + TypeScript + Tailwind CSS + shadcn/ui 초기 설정이 완료된다",
+        "server에 Express + TypeScript + tsx/nodemon + Zod 초기 설정이 완료된다",
+        "client와 server 모두 npm install 후 기본 빌드 명령이 실패하지 않는다"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T2",
+      "title": "Prisma 스키마 및 SQLite DB 설정",
+      "type": "infra",
+      "depends_on": ["T1"],
+      "acceptance_criteria": [
+        "Prisma schema에 User, UserSettings, Todo, Event, Memo, PomodoroSession, Diary 모델이 정의된다",
+        "npx prisma generate와 npx prisma db push가 성공한다",
+        "server에서 PrismaClient를 import하여 사용할 수 있다"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T3",
+      "title": "인증/세션/CSRF 시스템 구현",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "회원가입 시 Argon2id로 비밀번호가 해시되어 User에 저장된다",
+        "로그인 시 이메일/비밀번호를 검증하고 httpOnly sid 쿠키를 발급한다",
+        "로그아웃 시 세션이 삭제되고 쿠키가 만료된다",
+        "GET /api/auth/csrf-token에서 CSRF 토큰이 발급되고 POST/PUT/DELETE 요청에서 X-CSRF-Token 헤더가 검증된다",
+        "인증되지 않은 요청은 401, CSRF 토큰이 없거나 일치하지 않으면 403을 반환한다"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T4",
+      "title": "TODO CRUD API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T3", "T11"],
+      "acceptance_criteria": [
+        "POST /api/todos로 TODO를 생성할 수 있다",
+        "GET /api/todos로 필터(completed, priority)와 정렬(dueDate 오름차순, 완료 하단)이 적용된 목록을 반환한다",
+        "PUT /api/todos/:id와 DELETE /api/todos/:id가 자신의 TODO만 수정/삭제한다",
+        "프론트엔드 TODO 페이지에서 CRUD와 완료 토글이 동작한다"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T5",
+      "title": "캘린더 이벤트 CRUD API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T3", "T11"],
+      "acceptance_criteria": [
+        "GET /api/events?start=&end=로 월간 이벤트 목록을 반환한다",
+        "POST /api/events, PUT /api/events/:id, DELETE /api/events/:id가 동작한다",
+        "start < end 조건이 검증되고 자신의 이벤트만 조작 가능하다",
+        "프론트엔드에서 react-big-calendar 월간 뷰, 드래그 앤 드롭/리사이즈, 삭제 확인 모달이 동작한다"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T6",
+      "title": "메모 CRUD API 및 마크다운 에디터 UI 구현",
+      "type": "feature",
+      "depends_on": ["T3", "T11"],
+      "acceptance_criteria": [
+        "GET /api/memos?category=, GET /api/memos/:id, POST/PUT/DELETE /api/memos가 동작한다",
+        "자신의 메모만 조회/수정/삭제 가능하다",
+        "프론트엔드에서 @uiw/react-md-editor로 마크다운 작성과 미리보기가 가능하다",
+        "마크다운이 HTML로 렌더링된다"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T7",
+      "title": "일기 CRUD API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T3", "T11"],
+      "acceptance_criteria": [
+        "POST /api/diaries에서 같은 날짜(userId + date) 중복 생성 시 409를 반환한다",
+        "GET /api/diaries?month=와 GET /api/diaries/:date, PUT/DELETE /api/diaries/:id가 동작한다",
+        "mood는 happy/neutral/sad/angry/anxious 중 하나이며 그 외 값은 400을 반환한다",
+        "프론트엔드 일기 페이지에서 작성, 조회, 월간 목록, 수정, 삭제가 동작한다"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T8",
+      "title": "뽀모도로 타이머 API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T3", "T11"],
+      "acceptance_criteria": [
+        "POST /api/pomodoro/sessions에서 집중 세션이 저장된다(duration, type, completedAt)",
+        "GET /api/pomodoro/stats?range=day|week|month로 집중 시간 합계를 반환한다",
+        "Zustand 타이머가 25분 집중/5분 휴식 주기를 지원하고 사용자 설정이 가능하다",
+        "집중 세션 완료 시 서버에 자동 저장되고 휴식 세션은 저장하지 않는다"
+      ],
+      "estimated_size": "M",
+      "priority": 2
+    },
+    {
+      "key": "T9",
+      "title": "대시보드 API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T4", "T7", "T8"],
+      "acceptance_criteria": [
+        "GET /api/dashboard에서 오늘 할 일, 오늘 집중 시간 합계, 연속 집중 일수, 최근 3편 일기 미리보기를 반환한다",
+        "데이터가 없을 경우 빈 상태 메시지를 표시한다",
+        "인증된 사용자만 접근할 수 있다"
+      ],
+      "estimated_size": "S",
+      "priority": 2
+    },
+    {
+      "key": "T10",
+      "title": "테마 시스템 API 및 UI 구현",
+      "type": "feature",
+      "depends_on": ["T2", "T3", "T11"],
+      "acceptance_criteria": [
+        "UserSettings 모델에 theme, pomodoroFocus, pomodoroBreak 값이 저장된다",
+        "GET/PUT /api/user/settings로 테마 설정을 조회/변경할 수 있다",
+        "프론트엔드에서 light/dark/system 모드를 전환하고 Tailwind CSS darkMode: 'class'가 적용된다",
+        "새로고침 후에도 테마가 유지된다(DB + localStorage)"
+      ],
+      "estimated_size": "S",
+      "priority": 2
+    },
+    {
+      "key": "T11",
+      "title": "프론트엔드 공통 인프라 구현",
+      "type": "infra",
+      "depends_on": ["T1", "T3"],
+      "acceptance_criteria": [
+        "React Router 기반 페이지 라우팅과 헤더/사이드바 레이아웃이 구현된다",
+        "axios 인스턴스가 withCredentials: true와 X-CSRF-Token 인터셉터를 포함한다",
+        "TanStack Query queryClient와 Zustand 스토어(pomodoro, theme, ui)가 설정된다",
+        "Login, Register, Dashboard, Calendar, Todos, Memos, Pomodoro, Diary 페이지 라우트가 존재한다"
+      ],
+      "estimated_size": "M",
+      "priority": 3
+    },
+    {
+      "key": "T12",
+      "title": "통합 빌드 및 테스트 검증",
+      "type": "test",
+      "depends_on": ["T4", "T5", "T6", "T7", "T8", "T9", "T10"],
+      "acceptance_criteria": [
+        "cd client && npm run build가 성공한다",
+        "cd server && npm run build가 성공한다",
+        "cd server && npx prisma generate와 npx prisma db push가 성공한다",
+        "npm test 또는 설정된 테스트 명령이 실패 없이 완료된다"
+      ],
+      "estimated_size": "M",
+      "priority": 1
+    }
+  ]
+}
+```

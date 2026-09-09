@@ -1,0 +1,34 @@
+T5 TODO CRUD 백엔드·프론트엔드 구현을 확인하고 검증을 완료했습니다. `RESULT.json`을 지정된 경로에 저장했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD(백엔드+프론트엔드) 구현이 브랜치 ai-dev/01M20J8NRW/T5에 완료되어 있으며, 코드 분석과 검증을 마쳤습니다. server/src/routes/todos.ts, server/src/services/todo.ts에서 GET/GET :id/POST/PUT/DELETE, Zod 검증(priority 0~2, dueDate 선택, 본인 TODO만 CRUD), dueDate 오름차순/완료 항목 하단 정렬을 구현했습니다. client/src/api/todos.ts에 useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo TanStack Query hooks를 구현하고, client/src/pages/Todos.tsx에 목록/생성 폼/수정/삭제/완료 토글/completed·priority 필터 UI를 구현했습니다. client/src/api/todos.ts의 query key를 'todos'로 통일하여 목록·단건 캐시 무효화를 일관되게 처리했고, client/tests/todos.test.tsx, client/tests/todos-api.test.tsx 보충 테스트를 추가했습니다. npm test(클라 49개/서버 36개 통과), npm run lint, npm run typecheck, npm run build 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "server/tests/todos.test.ts",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx",
+    "client/tests/todos.test.tsx",
+    "client/tests/todos-api.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "React Router v7 migration 관련 future flag 경고가 client 테스트 stderr에 출력되나, 기능 및 검증 결과에 영향을 주지 않습니다."
+  ],
+  "followups": []
+}
+```

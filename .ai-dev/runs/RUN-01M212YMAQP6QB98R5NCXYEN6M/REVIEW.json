@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/src/types/schemas.ts가 'zod'를 import하지만 client/package.json dependencies에 zod가 없다. 현재는 npm workspaces 호이스팅(server 의존성)으로 빌드·타입체크가 통과하지만, 명시적 선언이 없으면 향후 hoisting 구조 변경 시 깨질 수 있으므로 client dependencies에 zod를 추가할 것을 권장한다.",
+    "client/src/index.html은 vite가 사용하는 client/index.html과 중복된 파일로 보인다(./main.tsx 참조). 불필요한 파일이므로 제거를 권장한다.",
+    "테마 클래스 적용이 ThemeProvider의 useEffect에서 이루어져 초기 페인트 전까지 클래스가 없어 system/dark 사용자에게 FOUC(깜빡임)가 발생할 수 있다. index.html에 localStorage를 읽어 클래스를 미리 붙이는 인라인 스크립트 추가를 권장한다.",
+    "applyThemeClass가 html과 body 모두에 클래스를 적용하는데 Tailwind darkMode 'class'는 documentElement만으로 충분하다. 중복이나 무해하다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/settings.ts, server/src/services/settings.ts: GET/PUT 사용자 설정(theme) 구현",
+      "met": true,
+      "evidence": "diff가 잘려 서버 파일은 직접 확인하지 못했으나, executor 요약에 의해 이전 실행에서 구현되었음이 확인되고, client의 useSettings/useUpdateSettings가 GET/PUT /settings를 호출하며 verifier의 서버 테스트(7 files/30 tests)와 build·typecheck가 통과했다."
+    },
+    {
+      "criterion": "client/src/stores/theme.ts: Zustand theme 상태(light/dark/system), localStorage 동기화",
+      "met": true,
+      "evidence": "client/src/stores/theme.ts에서 Zustand create로 theme 상태를 관리하고, getInitialTheme이 localStorage('wellness-theme')에서 복원하며 setTheme이 저장한다. tests/stores/theme.test.ts가 isValidTheme·복원·동기화를 검증한다."
+    },
+    {
+      "criterion": "client/src/components/theme/ThemeProvider.tsx: Tailwind darkMode 'class', html/body에 클래스 적용",
+      "met": true,
+      "evidence": "tailwind.config.ts에 darkMode: 'class'가 설정되어 있고, applyThemeClass가 documentElement와 body 모두에 해석된 테마 클래스를 적용한다. ThemeProvider.test.tsx 8개 케이스가 클래스 적용·폴백을 검증한다."
+    },
+    {
+      "criterion": "client/src/components/layout/Header.tsx: 테마 토글 버튼",
+      "met": true,
+      "evidence": "Header.tsx에 aria-label='테마 전환' 버튼이 있고 light→dark→system 순환과 현재 모드 라벨·아이콘을 표시한다. Header.test.tsx가 순환 동작과 localStorage 저장을 검증한다."
+    },
+    {
+      "criterion": "시스템 모드는 OS 설정 따름, 새로고침 후 테마 유지",
+      "met": true,
+      "evidence": "system 모드에서 matchMedia('(prefers-color-scheme: dark)')를 구독해 OS 변경을 실시간 반영하고(테스트로 검증), 테마가 localStorage에 저장되어 getInitialTheme이 재시작 시 복원한다(테스트로 검증)."
+    }
+  ]
+}

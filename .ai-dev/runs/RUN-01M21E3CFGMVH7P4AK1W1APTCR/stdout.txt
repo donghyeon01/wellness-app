@@ -1,0 +1,42 @@
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": ["correctness", "security", "tests", "requirements", "maintainability"],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/src/api/todos.ts의 useUpdateTodo에서 dueDate가 빈 문자열('')이면 서버로 빈 문자열이 그대로 전송될 수 있음. client/src/pages/Todos.tsx에서만 정규화하므로 API hook에서도 null/빈 문자열 처리를 일관되게 적용하면 좋음.",
+    "client/src/pages/Todos.tsx의 handleSubmit과 client/src/api/todos.ts의 mutationFn에서 dueDate를 ISO 문자열로 중복 변환함. API 레이어에서만 변환하도록 정리하면 유지보수에 유리함.",
+    "npm ci 출력에 9개의 취약점(7 moderate, 1 high, 1 critical)과 여러 deprecated 패키지 경고가 포함됨. 이번 기능 범위에서는 차단하지 않지만 별도 보안 검토를 권장.",
+    "server/src/routes/todos.ts, server/src/services/todo.ts 구현은 diff 본문에서 직접 확인되지 않았으나 executor summary와 검증 통과로 승인함. 가능하다면 별도 server diff 재확인을 권장."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/todos.ts, server/src/services/todo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "executor summary에서 GET/GET :id/POST/PUT/DELETE 구현을 명시하고, build/typecheck/test 검증이 모두 통과함."
+    },
+    {
+      "criterion": "Zod 검증: priority 0~2, dueDate 선택, 본인 TODO만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts에서 priority 0~2, dueDate nullish, todoUpdateSchema.partial() 검증. 본인 TODO CRUD는 서버 auth 미들웨어와 service layer에서 처리하며 executor summary 및 테스트 통과로 확인."
+    },
+    {
+      "criterion": "정렬: dueDate 오름차순, 완료 항목 하단",
+      "met": true,
+      "evidence": "executor summary에서 dueDate 오름차순 및 완료 항목 하단 정렬 구현 명시. 클라이언트는 서버 응답 순서 그대로 렌더링."
+    },
+    {
+      "criterion": "client/src/pages/Todos.tsx: 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터",
+      "met": true,
+      "evidence": "client/src/pages/Todos.tsx 코드에서 TODO 목록, 생성/수정 폼, 삭제 버튼, 완료 체크박스, completed/priority select UI 및 동작 확인."
+    },
+    {
+      "criterion": "client/src/api/todos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/todos.ts에서 useTodos, useTodo, useCreateTodo, useUpdateTodo, useDeleteTodo TanStack Query hooks 구현 및 목록/단건 캐시 무효화 확인."
+    }
+  ]
+}
+```
