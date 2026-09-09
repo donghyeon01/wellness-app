@@ -27,6 +27,12 @@ export const userSchema = z.object({
   name: z.string(),
 });
 
+export const themeSchema = z.enum(["light", "dark", "system"]);
+
+export const settingsSchema = z.object({
+  theme: themeSchema,
+});
+
 export const pomodoroModeSchema = z.enum(["focus", "break"]);
 
 export const pomodoroSessionSchema = z.object({
@@ -187,6 +193,8 @@ export const diarySchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type User = z.infer<typeof userSchema>;
+export type Theme = z.infer<typeof themeSchema>;
+export type Settings = z.infer<typeof settingsSchema>;
 export type PomodoroMode = z.infer<typeof pomodoroModeSchema>;
 export type PomodoroSession = z.infer<typeof pomodoroSessionSchema>;
 export type PomodoroSessionInput = z.infer<typeof pomodoroSessionInputSchema>;

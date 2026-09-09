@@ -9,80 +9,100 @@ import Calendar from "@/pages/Calendar";
 import Todos from "@/pages/Todos";
 import Diary from "@/pages/Diary";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { Layout } from "@/components/layout/Layout";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/calendar"
-            element={
-              <ProtectedRoute>
-                <Calendar />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/me"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/memos"
-            element={
-              <ProtectedRoute>
-                <Memos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/todos"
-            element={
-              <ProtectedRoute>
-                <Todos />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/diary"
-            element={
-              <ProtectedRoute>
-                <Diary />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <div className="min-h-screen bg-background p-8">
-                  <h1 className="text-3xl font-bold text-foreground">
-                    Wellness App
-                  </h1>
-                  <p className="text-muted-foreground">Phase 1 MVP 대시보드</p>
-                </div>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/pomodoro"
-            element={
-              <ProtectedRoute>
-                <Pomodoro />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route
+              path="/calendar"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Calendar />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/me"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Profile />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/memos"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Memos />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/todos"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Todos />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/diary"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Diary />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pomodoro"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Pomodoro />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <div className="bg-background">
+                      <h1 className="text-3xl font-bold text-foreground">
+                        Wellness App
+                      </h1>
+                      <p className="text-muted-foreground">
+                        Phase 1 MVP 대시보드
+                      </p>
+                    </div>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

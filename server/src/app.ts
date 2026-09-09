@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { authMiddleware } from "@/middleware/auth";
 import { csrfMiddleware } from "@/middleware/csrf";
 import authRoutes from "@/routes/auth";
+import settingsRoutes from "@/routes/settings";
 import pomodoroRoutes from "@/routes/pomodoro";
 import memoRoutes from "@/routes/memos";
 import eventRoutes from "@/routes/events";
@@ -25,6 +26,7 @@ export function createApp(
   app.use(authMiddleware);
   app.use(csrfMiddleware);
   app.use("/api/auth", authRoutes);
+  app.use("/api/settings", settingsRoutes);
   app.use("/api/pomodoro", pomodoroRoutes);
   app.use("/api/memos", memoRoutes);
   app.use("/api/events", eventRoutes);
