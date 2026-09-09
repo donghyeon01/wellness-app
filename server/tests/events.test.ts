@@ -16,6 +16,7 @@ vi.mock('@/lib/prisma', () => ({
     event: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
@@ -139,6 +140,11 @@ function setupPrisma() {
             (where.userId === undefined || e.userId === where.userId),
         ) ?? null
       )
+    },
+  )
+  ;(prisma.event.findUnique as unknown as Mock).mockImplementation(
+    async (args: FindUniqueArgs) => {
+      return events.find((e) => e.id === args.where.id) ?? null
     },
   )
   ;(prisma.event.create as unknown as Mock).mockImplementation(
@@ -374,7 +380,7 @@ describe('/api/events', () => {
     expect(res.status).toBe(400)
   })
 
-  it('타인 이벤트를 PUT/DELETE하면 404', async () => {
+  it('타인 이벤트를 PUT/DELETE하면 403', async () => {
     const owner = new TestClient(port)
     await registerUser(owner)
     const created = await createEvent(owner, {
@@ -390,10 +396,26 @@ describe('/api/events', () => {
     const putRes = await other.request('PUT', `/api/events/${event.id}`, {
       title: '탈취',
     })
-    expect(putRes.status).toBe(404)
+    expect(putRes.status).toBe(403)
 
     const delRes = await other.request('DELETE', `/api/events/${event.id}`)
-    expect(delRes.status).toBe(404)
+    expect(delRes.status).toBe(403)
+
+    // 실제로 소유자의 이벤트는 변경되지 않아야 한다
+    const ownerList = await owner.request('GET', '/api/events')
+    const ownerBody = (await ownerList.json()) as EventsBody
+    expect(ownerBody.events).toHaveLength(1)
+    expect(ownerBody.events[0].title).toBe('내 일정')
+  })
+
+  it('없는 이벤트를 PUT하면 404', async () => {
+    const client = new TestClient(port)
+    await registerUser(client)
+
+    const res = await client.request('PUT', '/api/events/nonexistent-id', {
+      title: '수정',
+    })
+    expect(res.status).toBe(404)
   })
 
   it('DELETE로 본인 이벤트를 삭제하고, 없는 이벤트는 404', async () => {

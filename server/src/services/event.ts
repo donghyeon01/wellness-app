@@ -62,6 +62,11 @@ export async function findOwnedEvent(userId: string, id: string): Promise<Event 
   return prisma.event.findFirst({ where: { id, userId } })
 }
 
+// id로만 조회한다. 라우트에서 존재/소유권을 분리해 처리할 때 사용한다.
+export async function findEventById(id: string): Promise<Event | null> {
+  return prisma.event.findUnique({ where: { id } })
+}
+
 export async function updateEvent(
   userId: string,
   id: string,

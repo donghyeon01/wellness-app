@@ -104,9 +104,13 @@ router.put(
     if (!userId) return
 
     // 부분 수정 허용: 변경되지 않은 start/end는 기존 값과 합쳐 start < end를 검증한다.
-    const existing = await eventService.findOwnedEvent(userId, req.params.id)
+    const existing = await eventService.findEventById(req.params.id)
     if (!existing) {
       res.status(404).json({ error: '이벤트를 찾을 수 없습니다.' })
+      return
+    }
+    if (existing.userId !== userId) {
+      res.status(403).json({ error: '이벤트에 대한 권한이 없습니다.' })
       return
     }
 
@@ -134,11 +138,17 @@ router.delete(
     const userId = getUserId(req, res)
     if (!userId) return
 
-    const deleted = await eventService.deleteEvent(userId, req.params.id)
-    if (!deleted) {
+    const existing = await eventService.findEventById(req.params.id)
+    if (!existing) {
       res.status(404).json({ error: '이벤트를 찾을 수 없습니다.' })
       return
     }
+    if (existing.userId !== userId) {
+      res.status(403).json({ error: '이벤트에 대한 권한이 없습니다.' })
+      return
+    }
+
+    await eventService.deleteEvent(userId, req.params.id)
     res.json({ ok: true })
   }),
 )
