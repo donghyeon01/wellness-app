@@ -1,0 +1,59 @@
+```json
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [
+    {
+      "severity": "high",
+      "file": "client/package.json",
+      "description": "client/src/types/schemas.ts, Login.tsx, Register.tsx 등에서 zod를 runtime으로 import해 사용(loginSchema.safeParse, registerSchema.safeParse 등)하지만, client/package.json dependencies에 zod가 명시되어 있지 않습니다. workspaces 환경에서 server가 zod를 설치하면 우연히 동작할 수 있으나, client를 독립으로 설치/빌드하거나 의존성 트리가 변경되면 런타임/빌드 오류가 발생하는 phantom dependency입니다."
+    }
+  ],
+  "required_changes": [
+    "client/package.json의 dependencies에 zod를 추가한다. 이때 서버 package.json(또는 package-lock.json)에 명시된 zod 버전과 동일하게 지정하고, npm install(또는 npm install -w client) 후 package-lock.json을 갱신한 뒤 npm run build && npm run typecheck && npm run lint && npm test를 다시 실행한다."
+  ],
+  "non_blocking": [
+    "npm audit 결과 9개 취약점(1 critical, 1 high, 7 moderate)이 확인되었으므로, npm audit --json으로 runtime/production 의존성에 영향을 주는 항목을 식별해 우선 업데이트/대체 권고.",
+    "client/src/api/pomodoro.ts의 formatDateQuery가 UTC 기준(toISOString().slice(0,10))이므로, 서버 타임존과 클라이언트 로컬 시간이 다르면 day/week/month 통계 경계가 어긋날 수 있음. toLocaleDateString('sv') 등 로컬 기준 사용 권고.",
+    "UserSettings의 pomodoroFocus/pomodoroBreak가 서버에서 동적으로 변경될 경우, 클라이언트 스토어 초기값도 /api/user/settings 등에서 조회해 동기화하도록 개선 권고(현재는 25분/5분 하드코딩).",
+    "client/tsconfig.json이 \"include\": [\"src\"]만 가리키므로 tests 디렉터리의 tsc 타입 검사가 누락됨. tests를 include하거나 tsconfig.test.json 추가 권고.",
+    "client/src/index.html과 client/index.html이 중복되어 있음. 사용하지 않는 client/src/index.html 삭제 권고.",
+    "Pomodoro.tsx에서 createSession 실패 시 사용자 피드백이 없으므로, useMutation의 onError 콜백과 에러 UI 추가 권고.",
+    "Pomodoro.tsx의 집중/휴식 입력 onChange에서 Number(e.target.value)가 NaN/Infinity가 될 수 있으므로, isFinite 체크 후 상태 업데이트 권고."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/pomodoro.ts, server/src/services/pomodoro.ts: GET sessions, POST session, GET stats(day/week/month) 구현",
+      "met": true,
+      "evidence": "npm run build / npm run typecheck에서 wellness-server tsc가 오류 없이 통과했고, executor 요약에서 GET sessions, POST session, GET stats(day/week/month) 구현 및 UserSettings 기본값 사용이 명시되어 있음."
+    },
+    {
+      "criterion": "UserSettings의 pomodoroFocus/pomodoroBreak 기본값 사용",
+      "met": true,
+      "evidence": "pomodoroSessionInputSchema에서 duration을 optional로 두어 서버 기본값 사용이 가능하고, executor 요약에서 UserSettings의 pomodoroFocus/pomodoroBreak 기본값 사용이 명시되어 있음. 클라이언트 스토어는 25분/5분 기본값으로 초기화됨."
+    },
+    {
+      "criterion": "client/src/stores/pomodoro.ts: Zustand 타이머 상태, focus/break 모드, 시작/일시정지/리셋",
+      "met": true,
+      "evidence": "client/src/stores/pomodoro.ts에 Zustand 스토어가 구현되어 있고, mode, isRunning, remainingSeconds, focusDuration, breakDuration, start/pause/reset/tick/complete/switchMode/setDurations 등이 구현되어 있음. client/tests/stores/pomodoro.test.ts가 통과함."
+    },
+    {
+      "criterion": "client/src/pages/Pomodoro.tsx: 타이머 UI, 집중/휴식 시간 설정, 집중 완료 시 서버에 세션 자동 저장",
+      "met": true,
+      "evidence": "Pomodoro.tsx에 타이머 UI(남은 시간, 모드 표시, 시작/일시정지/리셋/모드 전환), 집중/휴식 시간 입력 및 적용, useCreatePomodoroSession을 통한 집중 완료 시 자동 세션 저장이 구현되어 있음. client/tests/pages/Pomodoro.test.tsx가 통과함."
+    },
+    {
+      "criterion": "client/src/api/pomodoro.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/pomodoro.ts에 usePomodoroSessions, usePomodoroStats, useCreatePomodoroSession 훅이 구현되어 있고, queryKey, staleTime, invalidation 처리가 되어 있음. client/tests/api/pomodoro.test.tsx가 통과함."
+    }
+  ]
+}
+```

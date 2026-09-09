@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T8 일기(감정 상태) CRUD 구현 검증 완료. 이전 시도에서 server/src/routes/diary.ts, server/src/services/diary.ts, client/src/api/diary.ts, client/src/pages/Diary.tsx 및 테스트가 이미 커밋(904ce75)되어 있었고, 실패 원인은 Prisma 클라이언트가 Diary 모델 추가 전에 생성되어 '@prisma/client'에 Diary 타입이 없던 것(TS2305). npx prisma generate로 클라이언트를 재생성해 typecheck 오류를 해소했다. 또한 검증 파이프라인이 npm ci로 시작하므로 클린 설치 환경에서 동일 오류가 재발하지 않도록 server/package.json에 postinstall: 'prisma generate' 스크립트를 추가했다. prisma generate는 DATABASE_URL 없이 동작함을 확인. 백엔드는 GET /api/diaries?month=, GET /api/diaries/:date, POST, PUT /:id, DELETE /:id를 구현하고 Zod로 mood(happy/neutral/sad/angry/anxious)와 날짜 형식을 검증하며, @@unique([userId,date]) 위반(P2002)을 DiaryConflictError로 변환해 409를 반환한다. 프론트엔드는 5종 감정 선택 UI, 날짜별 작성/조회, 월간 목록(월 이동 포함), 수정/삭제를 제공하고 TanStack Query hooks(useDiaries, useDiary, useCreateDiary, useUpdateDiary, useDeleteDiary)로 서버와 연동한다. 검증: npm run lint 통과, npm run typecheck 통과, npm run build 통과(client+server), npm test 통과(client 32, server 35).",
+  "changed_files": [
+    "server/package.json"
+  ],
+  "tests_claimed": [
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build",
+    "npm test"
+  ],
+  "known_issues": [],
+  "followups": [
+    "검증 환경에서 npm ci 실행 시 server 워크스페이스의 postinstall이 prisma generate를 수행해 @prisma/client에 Diary 타입이 생성되는지 확인"
+  ]
+}

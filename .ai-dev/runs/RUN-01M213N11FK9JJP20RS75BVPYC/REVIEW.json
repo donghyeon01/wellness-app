@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/package.json에 moment와 zod가 dependencies로 선언되어 있지 않다. Calendar.tsx가 moment/moment-localizer를, types/schemas.ts가 zod를 import하므로 워크스페이스 hoisting에 의존하는 상태다. client 워크스페이스에 두 패키지를 명시적으로 추가하는 것을 권장한다.",
+    "client/src/index.html이 루트 client/index.html과 중복된 dead file로 보인다. Vite는 루트 index.html만 사용하므로 제거를 권장한다.",
+    "npm ci 출력에서 취약점 9건(critical 1, high 1)이 보고됐다. npm audit 결과를 확인하고 영향 범위를 검토하라.",
+    "react-big-calendar 공식 DnD 애드온 대신 자체 HTML5 DnD(event-dnd.ts)를 구현했다. 월간 뷰 요구사항은 충족하며 순수 로직이 테스트로 분리되어 있으나, 향후 week/day 뷰나 시간대 드래그로 확장할 경우 공식 애드온 도입을 재검토하라.",
+    "서버 측 파일(server/src/routes/events.ts, server/src/services/event.ts)과 server/tests/events.test.ts는 diff truncation으로 직접 확인하지 못했다. executor 요약과 워크스페이스 테스트 통과를 근거로 승인하되, 후속 리뷰에서 서버 소유권 검사(403)와 Zod 스키마를 육안 확인할 것을 권장한다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "diff가 truncated되어 서버 파일을 직접 확인하지 못했으나, executor 요약에 GET/POST/PUT/DELETE 구현과 server/tests/events.test.ts(403/404 통합 테스트) 추가가 명시되어 있고, npm test가 워크스페이스 전체에서 통과했다."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": true,
+      "evidence": "서버 구현은 executor 요약 근거. 클라이언트 측도 eventFormSchema의 refine으로 start < end를 강제하며, Calendar.test.tsx가 종료<시작 시 저장 차단과 오류 표시를 검증한다."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "Calendar.tsx에 month 뷰(views=['month']), EventModal(create/edit), ConfirmDeleteModal이 구현되어 있고, 테스트가 생성 모달 열기·저장·검증 오류 흐름을 확인한다."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "handleDrop에서 applyMove/applyResizeStart/applyResizeEnd로 날짜를 계산해 updateEvent.mutate를 즉시 호출한다. event-dnd.test.ts가 이동·리사이즈 계산과 경계 조건(start>=end 시 null)을 검증하고, Calendar.test.tsx에 드롭 시뮬레이션용 data-rbc-date 셀이 있다."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent가 구현되어 있고, tests/api/events.test.ts가 각 hook의 HTTP 메서드·URL·events 캐시 무효화를 검증한다."
+    }
+  ]
+}

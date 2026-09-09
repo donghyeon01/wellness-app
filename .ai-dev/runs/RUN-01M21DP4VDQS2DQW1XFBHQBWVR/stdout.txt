@@ -1,0 +1,56 @@
+Reviewer로서 diff와 검증 결과를 판정합니다.
+
+**판정 요약**
+- 클라이언트 측(`Calendar.tsx`, `api/events.ts`, `event-dnd.ts`, 모달 2종, Zod 폼 스키마)은 diff에서 직접 확인 가능하며 acceptance criteria와 일치합니다.
+- 서버 측(`routes/events.ts`, `services/event.ts`)은 diff가 truncate되어 직접 확인 불가하나, verifier의 사실(typecheck/lint/build/test 전부 통과, 서버 37개 테스트 통과 주장)과 executor summary가 일치하므로 충족으로 간주합니다.
+- 테스트가 acceptance criteria를 실제로 커버합니다: events 훅의 HTTP 메서드·파라미터·캐시 무효화, dnd 순수 로직(이동/리사이즈/경계조건), 캘린더 페이지의 생성 모달·`start < end` 검증 실패 경로까지 테스트됨.
+
+**차단 이슈 없음.** 비차단 사항:
+- `client/package.json`에 `moment`, `zod`가 직접 의존성으로 선언되지 않음(트랜짓 의존으로 해결되어 빌드는 통과하지만 phantom dependency 위험)
+- `client/src/index.html`이 루트 `client/index.html`과 중복된 stray 파일로 보임
+- `npm ci`에서 9개 취약점(critical 1 포함) 보고 — 본 diff 신규 도입인지 베이스라인인지 확인 필요
+- 클라이언트 번들 633kB로 chunk size 경고 발생
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": ["correctness", "security", "tests", "requirements", "maintainability"],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/package.json에 moment와 zod가 직접 의존성으로 선언되어 있지 않다. Calendar.tsx가 moment를 import하고 types/schemas.ts가 zod를 import하므로 phantom dependency 위험이 있다. npm install moment zod로 명시 선언을 권장한다.",
+    "client/src/index.html이 루트 client/index.html과 중복된 파일로 보인다. Vite는 루트 index.html만 사용하므로 src/ 하위 파일은 제거하는 것이 혼란을 줄인다.",
+    "npm ci 출력에 취약점 9개(critical 1, high 1 포함)가 보고되었다. 본 변경으로 신규 도입된 것인지 베이스라인인지 확인하고 npm audit 결과를 검토할 것을 권장한다.",
+    "클라이언트 번들이 633kB(gzip 199kB)로 500kB 경고를 초과한다. react-big-calendar와 moment locale이 주 원인으로 추정되며, 추후 코드 스플리팅이나 date-fns localizer 전환을 고려할 수 있다.",
+    "readDragPayload가 모듈 상태(currentDrag)를 dataTransfer보다 우선하므로, 비정상 종료 시 stale 상태가 남을 수 있다. onDragEnd에서 정리하고 있어 실무상 문제는 적지만 인지할 가치가 있다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "diff가 truncate되어 서버 파일을 직접 확인하지 못했으나, executor summary가 GET/POST/PUT/DELETE와 403/404 소유권 처리 구현을 보고하고, verifier의 서버 tsc 빌드·typecheck·lint 및 37개 서버 테스트 통과가 사실로 확인됨."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts의 eventFormSchema가 .refine으로 start < end를 강제하고 Calendar 테스트가 종료<시작 시 저장 차단을 검증함. 서버 측 Zod 검증과 본인 소유 이벤트 제한은 executor summary와 통과한 서버 테스트에 근거."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "Calendar.tsx가 BigCalendar를 defaultView='month', views=['month']로 사용하고, EventModal(생성/수정)과 ConfirmDeleteModal(삭제 확인)을 구현함."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "client/src/lib/event-dnd.ts의 applyMove/applyResizeStart/applyResizeEnd 순수 로직과 Calendar.tsx의 handleDrop이 updateEvent.mutate로 즉시 서버 저장. 경계조건(리사이즈 불가 방향)은 테스트로 검증됨."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent가 useQuery/useMutation 기반으로 구현되고 'events' 쿼리 키 무효화가 일관되며, tests/api/events.test.ts가 각 훅의 HTTP 호출과 캐시 무효화를 검증함."
+    }
+  ]
+}
+```

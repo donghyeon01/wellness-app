@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "캘린더 이벤트 CRUD 기능을 백엔드(Express + Zod + Prisma)와 프론트엔드(react-big-calendar + TanStack Query) 모두에 구현하고 테스트를 통과했습니다. server/src/routes/events.ts와 server/src/services/event.ts에서 GET/POST/PUT/DELETE 엔드포인트를 구현하고, start < end 및 본인 이벤트 CRUD 제약을 Zod/서비스 레벨에서 검증했습니다. client/src/pages/Calendar.tsx에서 월간 뷰, 이벤트 생성/수정 모달, 삭제 확인 모달, 드래그 앤 드롭 및 리사이즈로 날짜/기간 변경 후 서버 자동 저장 기능을 구현했습니다. client/src/api/events.ts에 TanStack Query hooks를 추가했고, client/src/lib/event-dnd.ts에 HTML5 DnD 순수 로직을 분리했습니다. client/src/App.tsx와 server/src/app.ts에 캘린더 라우트/라우터를 연결하고, client/src/types/schemas.ts에 이벤트 스키마를 추가했습니다. npm ci, npx prisma generate, npm run typecheck, npm run build, npm test를 모두 통과했습니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "server/src/app.ts",
+    "client/src/api/events.ts",
+    "client/src/lib/event-dnd.ts",
+    "client/src/pages/Calendar.tsx",
+    "client/tests/api/events.test.ts",
+    "client/tests/lib/event-dnd.test.ts",
+    "client/tests/pages/Calendar.test.tsx",
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "테스트 stderr에 React Router v7 전환 경고가 노출되나 기능 동작에는 영향이 없습니다.",
+    "Vite 프로덕션 빌드 시 메인 청크가 500kB를 초과합니다. dynamic import 또는 manualChunks로 분할 개선이 가능합니다."
+  ],
+  "followups": [
+    "실제 데이터베이스에 Event 테이블을 적용하려면 `npx prisma migrate dev`를 실행해야 합니다.",
+    "번들 크기 최적화 및 React Router v7 플래그 적용을 검토할 수 있습니다."
+  ]
+}

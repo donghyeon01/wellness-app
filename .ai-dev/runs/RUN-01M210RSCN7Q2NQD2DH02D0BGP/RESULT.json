@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "status": "partial",
+  "summary": "캘린더 이벤트 CRUD를 백엔드+프론트엔드로 구현했다. 서버: server/src/services/event.ts(소유권 검증 포함 listEvents/createEvent/findOwnedEvent/updateEvent/deleteEvent), server/src/routes/events.ts(GET/POST/PUT/DELETE, Zod로 start<end 및 날짜 형식 검증, 본인 이벤트만 접근·미존재/타인 소유는 404, GET은 ?start&end 겹침 범위 조회), app.ts에 /api/events 마운트(requireAuth + 기존 CSRF 미들웨어 적용). 클라이언트: client/src/api/events.ts(TanStack Query hooks: useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent, events 캐시 무효화), client/src/pages/Calendar.tsx(react-big-calendar 월간 뷰, momentLocalizer, 생성 모달, 수정 모달, 삭제 확인 모달, 월 범위 쿼리), types/schemas.ts에 eventSchema·eventFormSchema 추가, App.tsx에 /calendar 라우트 추가. DnD: react-dnd가 lockfile에 없어 공식 withDragAndDrop 애드온 대신 HTML5 네이티브 DnD로 구현(client/src/lib/event-dnd.ts의 순수 로직 + 커스텀 components.event/dateCellWrapper). 이벤트 바 중앙 드래그=날짜 이동, 양끝 핸들 드래그=시작/종료 리사이즈, 드롭 즉시 PUT으로 서버 자동 저장, 유효하지 않은 범위(start>=end)는 저장하지 않음. 테스트: server/tests/events.test.ts(인증/CSRF/소유권/검증/범위 조회 11건), client/tests/api/events.test.ts(hooks 4건), client/tests/lib/event-dnd.test.ts(순수 로직), client/tests/pages/Calendar.test.tsx(모달/검증/드롭 자동저장 9건). 검증: npm test를 실행했으나 worktree에 node_modules가 없어 vitest를 찾지 못해 실패. 패키지 설치(npm ci)가 금지 명령이라 needs_approval에 기록 — 코드와 테스트는 완성 상태이며 의존성 설치 후 검증이 필요하다.",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts",
+    "client/src/App.tsx",
+    "client/src/api/events.ts",
+    "client/src/lib/event-dnd.ts",
+    "client/src/pages/Calendar.tsx",
+    "client/src/types/schemas.ts",
+    "client/tests/api/events.test.ts",
+    "client/tests/lib/event-dnd.test.ts",
+    "client/tests/pages/Calendar.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [
+    {
+      "kind": "dependency",
+      "command": "npm ci",
+      "reason": "worktree에 node_modules가 없어 npm test(vitest)가 실행되지 않는다. package-lock.json 기반 클린 설치가 필요하나 패키지 설치 명령이 금지되어 승인이 필요하다. 설치 후 npm test 및 npm run typecheck으로 검증해야 한다."
+    }
+  ],
+  "known_issues": [
+    "npm test 미검증: node_modules 부재로 vitest 실행 불가(npm ci 승인 필요). 테스트 코드는 작성 완료했으나 실제 통과 여부는 미확인.",
+    "react-big-calendar 공식 DnD 애드온(react-big-calendar/lib/addons/dragAndDrop)은 react-dnd/react-dnd-html5-backend 의존성이 lockfile에 없어 사용 불가. HTML5 네이티브 DnD로 이동/리사이즈를 직접 구현함 — 월간 뷰에서 이벤트 바 양끝(좌=시작일, 우=종료일) 8px 핸들 드래그로 기간 조절.",
+    "localizer는 react-big-calendar가 dependencies로 번들하는 moment(momentLocalizer)를 사용. dayjs/luxon도 lockfile에 존재해 필요시 교체 가능.",
+    "@types/react-big-calendar@1.16.3 기준 components/onSelectSlot/messages 타입과 정합성을 맞췄으나, 의존성 미설치로 tsc typecheck 미실행."
+  ],
+  "followups": [
+    "npm ci 실행 후 npm test, npm run typecheck, npm run lint로 전체 검증",
+    "react-dnd/react-dnd-html5-backend 추가가 승인되면 공식 withDragAndDrop 애드온으로 교체 검토(주간/일간 뷰 리사이즈 지원)",
+    "이벤트 다중일 표시 및 '+N 더보기' 팝업 UX 검증을 실제 브라우저에서 확인"
+  ]
+}

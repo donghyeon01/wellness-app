@@ -1,0 +1,216 @@
+[1mWelcome to Devin CLI![0m
+Logged in as s_donghyeon01@naver.com.
+
+You're all set. Run [1mdevin[0m to get started.
+계획을 세우기 위해 README.md와 docs/ 폴더의 모든 문서를 읽겠습니다.문서를 모두 확인했습니다. 저장소에는 문서와 `ai-dev.project.yaml`만 있고 소스 코드가 없으므로, Phase 1 MVP 전체를 그린필드로 스캐폴딩해야 합니다. `docs/roadmap.md`의 AI DEV OS 실행 순서와 `docs/architecture.md`의 디렉토리 구조를 그대로 따르는 태스크 그래프를 작성합니다.
+
+주요 판단 사항:
+- 서버 스캐폴딩(T1) → 인증 기반(T2) → 도메인 API 5개(T3~T7, 병렬 가능) → 대시보드 API(T8) 순으로 구성합니다. 대시보드는 TODO·일기·뽀모도로 통계를 통합하므로 해당 API들에 의존합니다.
+- 클라이언트는 인증/레이아웃 골격(T9)을 먼저 세우고, 기능 페이지 3개 태스크(T10~T12)가 이에 의존합니다.
+- `ai-dev.project.yaml`의 verify 명령(`npm ci`, `build`, `lint`, `typecheck`, `test -- --run`)이 루트에서 실행되므로 루트 `package.json`에 워크스페이스/통합 스크립트가 필요하다고 가정합니다.
+- `forbidden_paths`에 `.env*`가 있어 `.env` 파일 생성이 불가합니다. `DATABASE_URL`은 환경 변수 주입 또는 스키마 기본값으로 처리해야 합니다(assumptions에 기재).
+- Phase 2/3 확장은 `AuthProvider`, `SessionStore` 인터페이스와 `server/src/ws/`, `client/public/manifest.json` 자리만 비워두는 수준으로 제한합니다.
+
+```json
+{
+  "schema_version": 1,
+  "requirement": {
+    "summary": "docs/에 명시된 Phase 1 MVP(인증, TODO, 캘린더, 메모, 뽀모도로, 일기, 대시보드, 테마)를 문서 기술 스택과 디렉토리 구조 그대로 그린필드 구현한다.",
+    "assumptions": [
+      "저장소에 소스 코드가 전혀 없으므로 client/, server/, 루트 package.json 전체를 새로 스캐폴딩한다",
+      "의존성 추가 필요: express, cookie-parser, argon2, zod, @prisma/client, prisma, csrf-csrf (server)",
+      "의존성 추가 필요: react, react-dom, react-router-dom, axios, zustand, @tanstack/react-query, zod, react-big-calendar, @uiw/react-md-editor, tailwindcss, shadcn/ui 관련 radix 패키지, vite, typescript, vitest (client 및 공통)",
+      "react-big-calendar localizer는 문서에 명시가 없으므로 date-fns localizer를 사용하고, 드래그 앤 드롭은 react-big-calendar의 withDragAndDrop addon을 사용한다",
+      "shadcn/ui는 CLI 이니셜라이즈 대신 필요한 컴포넌트(button, input, dialog, calendar 등)를 components/ui/에 수동 배치하는 것으로 가정한다",
+      "ai-dev.project.yaml verify 명령이 루트에서 실행되므로 루트 package.json에 client/server를 오가는 build, lint, typecheck, test 통합 스크립트(npm workspaces 또는 --prefix)를 둔다",
+      "forbidden_paths에 .env*가 있어 .env 파일을 만들 수 없다. DATABASE_URL은 prisma db push/generate 실행 시 환경 변수로 주입하거나 executor가 허용 범위 내에서 처리한다고 가정한다",
+      "SQLite provider는 @db.Date 네이티브 타입을 무시하므로 Diary.date는 DateTime으로 저장하고 애플리케이션 레벨에서 날짜 단위 unique를 보장한다",
+      "세션 저장소는 문서대로 MemorySessionStore만 구현하고 SessionStore 인터페이스와 redis.ts 파일 위치만 비워둔다",
+      "테스트는 vitest 기반으로 작성하며 npm test -- --run이 통과 가능한 최소한의 단위/통합 테스트를 포함한다",
+      "CORS는 개발 환경 localhost 오리진만 허용하고 credentials를 허용한다",
+      "Phase 2/3 기능(WebSocket, OAuth, PWA, 공유, 채팅, Room 등)은 실제 구현 없이 인터페이스와 디렉토리 자리만 유지한다"
+    ],
+    "out_of_scope": [
+      "Phase 2: 카카오 OAuth, 휴대폰 인증, 친구, 공유, 채팅, BGM, 커스텀 테마, 쉬움 모드, PWA",
+      "Phase 3: Room 꾸미기, 2FA, Tauri 데스크탑, Capacitor 모바일",
+      "Redis 세션 저장소 실제 구현",
+      "문서에 없는 기능(알림, 태그, 첨부파일, 검색 등) 일체"
+    ],
+    "open_questions": []
+  },
+  "architecture_notes": "docs/architecture.md의 client/ + server/ 모노레포 구조를 그대로 따른다. 서버는 routes → middleware(auth/csrf/validate/error-handler) → services → prisma 흐름, 클라이언트는 pages → api(TanStack Query hooks) → lib(axios+csrf) + stores(Zustand) 흐름. 확장 경계로 AuthProvider/SessionStore 인터페이스와 server/src/ws/, client/public/manifest.json 자리만 확보한다. Prisma schema는 docs/data-model.md Phase 1 섹션을 그대로 사용한다.",
+  "adr_proposals": [],
+  "tasks": [
+    {
+      "key": "T1",
+      "title": "모노레포 스캐폴딩: client(Vite+React+TS+Tailwind) + server(Express+TS) + Prisma schema + 루트 스크립트",
+      "type": "feature",
+      "depends_on": [],
+      "acceptance_criteria": [
+        "docs/architecture.md의 디렉토리 구조와 일치하는 client/, server/ 골격이 존재한다",
+        "server/src/prisma/schema.prisma가 docs/data-model.md Phase 1 스키마(User, UserSettings, Todo, Event, Memo, PomodoroSession, Diary)와 일치한다",
+        "npx prisma generate와 npx prisma db push가 성공한다",
+        "루트에서 npm run build, npm run lint, npm run typecheck, npm test -- --run 스크립트가 client/server를 대상으로 동작한다",
+        "Tailwind darkMode: 'class' 설정이 적용되어 있다"
+      ],
+      "estimated_size": "M",
+      "priority": 0
+    },
+    {
+      "key": "T2",
+      "title": "서버 인증 기반: Argon2id 비밀번호, SessionStore 인터페이스+Memory 구현, 세션/CSRF 미들웨어, auth 라우트",
+      "type": "feature",
+      "depends_on": ["T1"],
+      "acceptance_criteria": [
+        "POST /api/auth/register 시 비밀번호가 Argon2id(memoryCost 19456, timeCost 2, parallelism 1)로 해시되어 저장된다",
+        "POST /api/auth/login 성공 시 sid httpOnly 쿠키(sameSite=lax, 7일)가 설정된다",
+        "GET /api/auth/csrf-token이 토큰을 발급하고, X-CSRF-Token 헤더 없는 POST/PUT/DELETE는 403을 반환한다",
+        "인증되지 않은 보호 엔드포인트 요청은 401을 반환한다",
+        "POST /api/auth/logout 시 세션 삭제와 쿠키 만료가 이루어진다",
+        "SessionStore 인터페이스와 MemorySessionStore가 sessions/ 디렉토리에 존재하고 sliding expiration(touch)이 동작한다",
+        "AuthProvider 인터페이스와 EmailPasswordProvider가 정의되어 있다"
+      ],
+      "estimated_size": "M",
+      "priority": 0
+    },
+    {
+      "key": "T3",
+      "title": "TODO API: CRUD + 필터(완료/우선순위) + 정렬(dueDate 오름차순, 완료 하단)",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "GET/POST/PUT/DELETE /api/todos(/:id) 엔드포인트가 Zod 검증과 함께 동작한다",
+        "자신의 TODO만 조회/수정/삭제 가능하다(타인 리소스 403 또는 404)",
+        "priority가 0~2 범위 외이면 400을 반환한다",
+        "dueDate 없이 생성 가능하고 기본 정렬이 dueDate 오름차순·완료 항목 하단이다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T4",
+      "title": "캘린더 이벤트 API: 월간 조회 + CRUD + start<end 검증",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "GET /api/events?start&end가 기간 내 이벤트를 반환한다",
+        "POST/PUT/DELETE /api/events(/:id)가 동작하고 start >= end이면 400을 반환한다",
+        "자신의 이벤트만 조회/수정/삭제 가능하다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T5",
+      "title": "메모 API: CRUD + 카테고리 필터",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "GET /api/memos?category 필터와 GET /api/memos/:id, POST, PUT, DELETE가 동작한다",
+        "category가 자유 텍스트로 저장된다",
+        "자신의 메모만 조회/수정/삭제 가능하다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T6",
+      "title": "일기 API: 날짜별/월간 조회 + CRUD + 하루 1편 제약 + mood 검증",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "GET /api/diaries?month와 GET /api/diaries/:date, POST, PUT, DELETE가 동작한다",
+        "같은 날짜(userId+date)에 2개 생성 시 409를 반환한다",
+        "mood가 happy/neutral/sad/angry/anxious 외이면 400을 반환한다",
+        "자신의 일기만 조회/수정/삭제 가능하다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T7",
+      "title": "뽀모도로 API: 세션 기록 저장 + 일/주/월 통계",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "POST /api/pomodoro/sessions가 duration, type(focus|break), completedAt을 저장한다",
+        "GET /api/pomodoro/sessions?date&range와 GET /api/pomodoro/stats?range=day|week|month가 집중 시간 합계와 연속 집중 일수를 반환한다",
+        "자신의 세션만 조회/기록 가능하다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T8",
+      "title": "대시보드 API: 오늘 할 일 + 뽀모도로 통계 + 최근 일기 3편 통합 엔드포인트",
+      "type": "feature",
+      "depends_on": ["T3", "T6", "T7"],
+      "acceptance_criteria": [
+        "GET /api/dashboard가 오늘/기한 경과 미완료 TODO, 오늘 집중 시간·연속 일수, 최근 일기 3편(mood + content 100자 미리보기)을 반환한다",
+        "인증되지 않은 요청은 401을 반환한다",
+        "데이터가 없어도 빈 상태로 정상 응답한다"
+      ],
+      "estimated_size": "S",
+      "priority": 1
+    },
+    {
+      "key": "T9",
+      "title": "클라이언트 기반: axios+CSRF 인터셉터, 인증 페이지(로그인/회원가입), 라우팅 가드, 헤더/사이드바 레이아웃, TanStack Query/Zustand 설정",
+      "type": "feature",
+      "depends_on": ["T2"],
+      "acceptance_criteria": [
+        "client/src/lib/axios.ts가 withCredentials와 X-CSRF-Token 헤더 자동 첨부를 수행한다",
+        "Login.tsx, Register.tsx가 동작하고 인증 상태에 따라 보호 라우트로 리다이렉트된다",
+        "components/layout/의 헤더와 사이드바가 모든 보호 페이지에 공통 적용된다",
+        "useAuth 관련 TanStack Query hook(/api/auth/me)이 동작한다",
+        "types/schemas.ts에 서버와 공유되는 Zod 스키마/타입이 정의된다"
+      ],
+      "estimated_size": "M",
+      "priority": 0
+    },
+    {
+      "key": "T10",
+      "title": "클라이언트 TODO 페이지 + 캘린더 페이지(react-big-calendar 월간 뷰, 드래그 앤 드롭 저장, 삭제 확인 모달)",
+      "type": "feature",
+      "depends_on": ["T3", "T4", "T9"],
+      "acceptance_criteria": [
+        "Todos.tsx에서 TODO 생성/수정/완료 토글/삭제/필터가 동작한다",
+        "Calendar.tsx가 월간 뷰로 이벤트를 표시하고 생성/수정/삭제 확인 모달이 동작한다",
+        "드래그 앤 드롭·크기 조절 후 PUT /api/events로 자동 저장된다",
+        "useTodos/useEvents hook이 문서의 쿼리 키 규칙(['todos', filters], ['events', monthRange])을 따른다"
+      ],
+      "estimated_size": "M",
+      "priority": 1
+    },
+    {
+      "key": "T11",
+      "title": "클라이언트 메모 페이지(@uiw/react-md-editor, 카테고리 필터) + 일기 페이지(감정 5종, 날짜별 작성/조회)",
+      "type": "feature",
+      "depends_on": ["T5", "T6", "T9"],
+      "acceptance_criteria": [
+        "Memos.tsx에서 마크다운 작성+미리보기 분할이 동작하고 카테고리 필터링이 된다",
+        "마크다운 렌더링 시 XSS 방어를 위한 sanitize가 적용된다",
+        "Diary.tsx에서 mood 5종 선택, 날짜별 작성/수정/삭제, 월간 목록이 동작한다",
+        "하루 1편 제약 위반 시 409 응답을 사용자에게 표시한다"
+      ],
+      "estimated_size": "M",
+      "priority": 1
+    },
+    {
+      "key": "T12",
+      "title": "클라이언트 뽀모도로 타이머(Zustand) + 대시보드 페이지 + 테마(light/dark/system) + 최종 검증",
+      "type": "feature",
+      "depends_on": ["T7", "T8", "T9"],
+      "acceptance_criteria": [
+        "Pomodoro.tsx가 25분/5분 기본 주기와 사용자 설정 시간으로 카운트다운하며 집중 완료 시 POST /api/pomodoro/sessions로 자동 저장한다",
+        "stores/pomodoro.ts의 타이머가 탭 비활성 상태에서도 Date 기반으로 정확히 동작한다",
+        "Dashboard.tsx가 오늘 할 일, 집중 시간·연속 일수, 최근 일기 3편, 오늘 날짜를 표시하고 데이터 없을 때 빈 상태를 보인다",
+        "테마 토글이 light/dark/system을 지원하고 UserSettings(DB) + localStorage에 저장되어 새로고침 후 유지된다",
+        "npm run build(client·server), npm run lint, npm run typecheck, npm test -- --run이 모두 통과한다"
+      ],
+      "estimated_size": "M",
+      "priority": 0
+    }
+  ]
+}
+```

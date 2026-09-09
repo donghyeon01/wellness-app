@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T11 다크/라이트/시스템 테마 구현 완료. 서버 측 GET/PUT /api/settings(theme) 라우트·서비스와 클라이언트 Zustand theme store(localStorage 동기화)는 이전 실행에서 이미 구현되어 있어 검증만 수행. 이번 세션에서 누락된 클라이언트 UI를 구현: (1) client/src/components/theme/ThemeProvider.tsx — Tailwind darkMode 'class' 전략에 맞춰 해석된 테마(light/dark) 클래스를 documentElement(html)와 body 모두에 적용, theme='system'이면 matchMedia('(prefers-color-scheme: dark)')를 구독해 OS 설정 변경을 실시간 반영, matchMedia 미지원 환경(jsdom)은 light 폴백, 로그인 사용자는 내부 ThemeSync 컴포넌트가 서버 설정(DB)과 localStorage를 양방향 동기화(QueryClientContext·인증 없으면 비활성). (2) client/src/components/layout/Header.tsx — light→dark→system 순환 토글 버튼(aria-label='테마 전환', 현재 모드 라벨·lucide 아이콘 표시). (3) client/src/components/layout/Layout.tsx — Header + main 래퍼(기존 App.tsx가 import하던 누락 컴포넌트로 컴파일 복구). (4) 기존 client/tests/api/settings.test.ts의 .ts 파일 내 JSX 구문 오류를 React.createElement로 수정. 테스트: ThemeProvider 8개(클래스 적용, OS 변경 추적, 폴백, localStorage 유지), Header/Layout 4개(토글 순환, 라벨, localStorage 동기화). 검증: npm test 통과(client 12 files/42 tests, server 7 files/30 tests, exit 0), npm run typecheck 양쪽 통과.",
+  "changed_files": [
+    "client/src/components/theme/ThemeProvider.tsx",
+    "client/src/components/layout/Header.tsx",
+    "client/src/components/layout/Layout.tsx",
+    "client/tests/components/theme/ThemeProvider.test.tsx",
+    "client/tests/components/layout/Header.test.tsx",
+    "client/tests/api/settings.test.ts",
+    "client/src/stores/theme.ts",
+    "client/src/api/settings.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/src/routes/settings.ts",
+    "server/src/services/settings.ts",
+    "server/src/app.ts",
+    "server/tests/settings.test.ts",
+    "client/tests/stores/theme.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck --workspace=client",
+    "npm run typecheck --workspace=server"
+  ],
+  "known_issues": [
+    "npm install 시 allow-scripts 정책으로 prisma/argon2/esbuild postinstall 스크립트가 차단되었으나 테스트는 prisma mock 덕분에 정상 통과. 실제 서버 실행/빌드 시에는 prisma generate 등 추가 승인이 필요할 수 있음."
+  ],
+  "followups": [
+    "테마 선택을 드롭다운 메뉴(3옵션 개별 선택)로 확장 가능 — 현재는 단일 버튼 순환 방식",
+    "비로그인 상태에서도 /settings PUT을 시도하지 않으므로, 게스트 테마는 localStorage만 사용(문서 요구사항과 일치)"
+  ]
+}

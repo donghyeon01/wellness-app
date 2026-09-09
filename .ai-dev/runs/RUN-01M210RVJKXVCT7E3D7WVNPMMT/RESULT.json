@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "일기(감정 상태) CRUD를 백엔드와 프론트엔드에 모두 구현하고, 검증·빌드·린트를 통과했습니다. server/src/services/diary.ts에서 Prisma 기반 CRUD, userId+date 중복 처리(409), mood Zod 검증(happy/neutral/sad/angry/anxious)을 구현했습니다. server/src/routes/diary.ts에서 GET /api/diaries?month=, GET /api/diaries/:date, POST /api/diaries, PUT /api/diaries/:id, DELETE /api/diaries/:id 엔드포인트를 추가했습니다. client/src/api/diary.ts에서 useDiaries, useDiary, useCreateDiary, useUpdateDiary, useDeleteDiary TanStack Query hooks를 구현했습니다. client/src/pages/Diary.tsx에서 5종 감정 선택 UI, 날짜 선택, 내용 작성, 월간 목록, 수정/삭제 기능을 구현했습니다. server/src/app.ts와 client/src/App.tsx, client/src/types/schemas.ts에 라우트와 타입/스키마를 연결했습니다. server/tests/diary.test.ts, client/tests/api/diary.test.ts, client/tests/pages/Diary.test.tsx 테스트를 추가했습니다. npm test는 client 32개, server 35개 총 67개 모두 통과했고, npm run build와 npm run lint도 통과했습니다.",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/services/diary.ts",
+    "server/src/routes/diary.ts",
+    "server/tests/diary.test.ts",
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/api/diary.ts",
+    "client/src/pages/Diary.tsx",
+    "client/tests/api/diary.test.ts",
+    "client/tests/pages/Diary.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build",
+    "npm run lint"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": [
+    "대시보드/사이드바에 /diary 링크를 연결하면 사용자 이동이 더 자연스러워집니다."
+  ]
+}

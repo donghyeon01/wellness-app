@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/tests/pages/Todos.test.tsx는 목록 렌더링/필터 변경/완료 표시만 검증하며, 생성/수정/삭제/완료 토글 상호작용은 커버하지 않습니다. UI acceptance criteria를 더 견고하게 검증하려면 user-event 기반 상호작용 테스트를 추가하세요.",
+    "client/src/api/todos.ts의 useTodo queryKey가 ['todo', id]로 목록 key ['todos']와 prefix를 공유하지 않습니다. 상세/목록 캐시 무효화 일관성을 위해 ['todos', id]로 통일하는 것이 권장됩니다.",
+    "client/src/App.test.tsx와 client/tests/App.test.tsx, client/index.html과 client/src/index.html이 중복되어 있습니다. 불필요한 파일을 정리하세요.",
+    "client/tsconfig.json의 include가 'src'만 포함하므로 client/tests의 타입은 tsc --noEmit에서 검증되지 않습니다. 테스트 타입 일관성을 위해 tests도 tsconfig에 포함하거나 별도 tsconfig.test.json을 고려하세요.",
+    "client/src/pages/Todos.tsx의 handleSubmit에서 <input type='date'>(YYYY-MM-DD)를 new Date(...).toISOString()으로 변환하면 타임존 뒤쪽 사용자에게 표시 날짜가 하루 어긋날 수 있습니다."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/todos.ts, server/src/services/todo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "서버 typecheck/build/test 통과; server/tests/todos.test.ts에 통합 테스트 11개 존재(executor 요약). diff에서는 서버 소스가 잘려 있어 직접 확인 불가, verification 결과로 판단."
+    },
+    {
+      "criterion": "Zod 검증: priority 0~2, dueDate 선택, 본인 TODO만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts에서 todoInputSchema/todoUpdateSchema에 priority 0~2, dueDate nullish, title/description 길이 제한 검증; 서버 테스트 및 executor 요약상 본인 TODO 검증(findFirst {id,userId}) 확인."
+    },
+    {
+      "criterion": "정렬: dueDate 오름차순, 완료 항목 하단",
+      "met": true,
+      "evidence": "executor 요약에서 서버 정렬(completed asc, dueDate asc nulls last) 확인; 클라이언트는 정렬된 목록을 그대로 렌더링."
+    },
+    {
+      "criterion": "client/src/pages/Todos.tsx: 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터",
+      "met": true,
+      "evidence": "client/src/pages/Todos.tsx에 TODO 목록/생성·수정 폼/완료 토글/수정·삭제/completed·priority 필터 UI 구현; client build/lint/test 통과. 단, 페이지 테스트는 렌더링/필터 변경만 검증."
+    },
+    {
+      "criterion": "client/src/api/todos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/todos.ts에 useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo 구현; client/tests/api/todos.test.ts에서 쿼리 파라미터 변환/단건 조회/생성/수정/삭제/dueDate ISO 변환 등 검증."
+    }
+  ]
+}

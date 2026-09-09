@@ -1,0 +1,53 @@
+## 수행한 작업
+
+- `docs/requirements.md`, `docs/architecture.md`, `docs/data-model.md` 등 Phase 1 MVP 문서를 확인했습니다.
+- T11 다크/라이트/시스템 테마 기능이 이미 `ai-dev/01M20J8NRW/T11` 브랜치에 구현되어 있음을 확인했습니다.
+  - 서버: `server/src/routes/settings.ts`, `server/src/services/settings.ts`에서 `GET/PUT /api/settings` (theme) 구현
+  - 클라이언트: `client/src/stores/theme.ts` (Zustand + localStorage), `client/src/components/theme/ThemeProvider.tsx` (Tailwind `darkMode: 'class'`, html/body 클래스 적용, OS 설정 감지), `client/src/components/layout/Header.tsx` (테마 토글 버튼)
+- `git show 5431ad1`로 변경 파일 목록을 확인했습니다.
+- 검증 명령을 실행했습니다.
+  - `npm test` → client 42개, server 30개 테스트 전체 통과
+  - `npm run build` → client Vite 빌드 및 server `tsc` 모두 성공
+
+## 검증 근거
+
+- `npm test`: client 12 test files / 42 tests passed, server 7 test files / 30 tests passed
+- `npm run build`: client production build success, server TypeScript compile success
+
+## 남은 리스크
+
+- React Router v7 future flag warnings가 테스트 stderr에 노출되나, 테스트 통과에는 영향 없음
+
+결과 파일은 `C:\Users\s_don\Desktop\Projects\wellness-app\.ai-dev\runs\RUN-01M21910T6SVGZ5NXNSC44TP96\RESULT.json`에 저장했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T11 다크/라이트/시스템 테마 기능을 검증 완료했습니다. 서버의 /api/settings GET/PUT, 클라이언트 Zustand theme 상태 및 localStorage 동기화, ThemeProvider를 통한 Tailwind darkMode 'class' 적용, Header 테마 토글 버튼, OS 설정 따르는 system 모드 및 새로고침 유지 모두 구현되어 있으며, npm test와 npm run build 모두 통과했습니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/api/settings.ts",
+    "client/src/components/layout/Header.tsx",
+    "client/src/components/layout/Layout.tsx",
+    "client/src/components/theme/ThemeProvider.tsx",
+    "client/src/stores/theme.ts",
+    "client/src/types/schemas.ts",
+    "client/tests/api/settings.test.ts",
+    "client/tests/components/layout/Header.test.tsx",
+    "client/tests/components/theme/ThemeProvider.test.tsx",
+    "client/tests/stores/theme.test.ts",
+    "server/src/app.ts",
+    "server/src/routes/settings.ts",
+    "server/src/services/settings.ts",
+    "server/tests/settings.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}
+```

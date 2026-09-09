@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T9 뽀모도로 타이머 + 세션 기록/통계 구현 완료. 서버: server/src/services/pomodoro.ts에 UserSettings의 pomodoroFocus/pomodoroBreak 기본값을 사용하는 세션 생성(list/create/stats, day/week/month 범위를 UTC 기준으로 계산) 로직을 구현하고, server/src/routes/pomodoro.ts에 GET /api/pomodoro/sessions, POST /api/pomodoro/sessions, GET /api/pomodoro/stats 라우트를 requireAuth+CSRF 하에 zod 검증으로 연결(app.ts에 마운트). 클라이언트: client/src/stores/pomodoro.ts에 Zustand 기반 focus/break 모드·start/pause/reset/tick/complete/switchMode/setDurations 상태를 구현하고, client/src/api/pomodoro.ts에 TanStack Query hooks(usePomodoroSessions/usePomodoroStats/useCreatePomodoroSession, 성공 시 pomodoro 쿼리 무효화)를 추가. client/src/pages/Pomodoro.tsx에 타이머 UI·집중/휴식 분 단위 설정·집중 완료 시 세션 자동 저장(focusCompleted 플래그→createSession)을 구현하고 /pomodoro 라우트를 보호 라우트로 등록. 이전 실패 피드백 반영: client/package.json에 zod ^3.23.8(서버와 동일 버전 범위)을 추가하고 npm install --package-lock-only로 package-lock.json을 갱신(실설치된 zod 3.25.76). 검증: npm run build, npm run typecheck, npm run lint, npm test 모두 통과(클라이언트 11파일/35테스트, 서버 7파일/32테스트).",
+  "changed_files": [
+    "client/package.json",
+    "package-lock.json",
+    "server/package.json",
+    "server/src/app.ts",
+    "server/src/routes/pomodoro.ts",
+    "server/src/services/pomodoro.ts",
+    "server/tests/pomodoro.test.ts",
+    "client/src/App.tsx",
+    "client/src/api/pomodoro.ts",
+    "client/src/pages/Pomodoro.tsx",
+    "client/src/stores/pomodoro.ts",
+    "client/src/types/schemas.ts",
+    "client/tests/api/pomodoro.test.tsx",
+    "client/tests/pages/Pomodoro.test.tsx",
+    "client/tests/stores/pomodoro.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run build",
+    "npm run typecheck",
+    "npm run lint"
+  ],
+  "known_issues": [],
+  "followups": [
+    "루트의 tmp-zod-test.js는 이전 시도에서 남은 임시 스크립트로 gitignore 대상이며, 파일 삭제 명령이 금지되어 그대로 두었음. 필요시 시스템이 정리 가능",
+    "서버 통계 범위 계산이 UTC 자정 기준이므로 사용자 로컬 타임존 기준 집계가 필요해지면 timezone 파라미터 확장 고려"
+  ]
+}

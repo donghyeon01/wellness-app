@@ -1,0 +1,38 @@
+T5 TODO CRUD 기능의 백엔드/프론트엔드 구현과 테스트를 완료했습니다.
+
+- `server/src/routes/todos.ts`, `server/src/services/todo.ts`에 GET/GET :id/POST/PUT/DELETE 엔드포인트 및 Zod 검증(priority 0~2, dueDate 선택, 본인 TODO만 CRUD), dueDate 오름차순+완료 항목 하단 정렬이 구현되어 있습니다.
+- `client/src/pages/Todos.tsx`에 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터가 구현되어 있습니다.
+- `client/src/api/todos.ts`에 TanStack Query hooks(`useTodos`, `useTodo`, `useCreateTodo`, `useUpdateTodo`, `useDeleteTodo`)가 구현되어 있습니다.
+- `npm test`를 포함해 `npm run lint`, `npm run typecheck`, `npm run build` 모두 통과했습니다.
+- RESULT.json을 `C:\Users\s_don\Desktop\Projects\wellness-app\.ai-dev\runs\RUN-01M21ABBTWPJ8MZBAKGG6Q9QF2\RESULT.json`에 작성했습니다.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD 기능의 백엔드/프론트엔드 구현과 테스트를 완료했습니다. server/src/routes/todos.ts, server/src/services/todo.ts에서 GET/GET :id/POST/PUT/DELETE 엔드포인트 및 Zod 검증(priority 0~2, dueDate 선택, 본인 TODO만 CRUD), dueDate 오름차순+완료 하단 정렬을 구현했습니다. client/src/pages/Todos.tsx에서 목록/생성 폼/수정/삭제/완료 토글/completed·priority 필터를 구현하고, client/src/api/todos.ts에서 TanStack Query hooks를 제공했습니다. client/server 테스트 모두 통과했으며, lint/typecheck/build도 추가로 통과했습니다.",
+  "changed_files": [
+    "client/src/App.tsx",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "client/src/types/schemas.ts",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx",
+    "server/src/app.ts",
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "server/tests/todos.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "React Router v7 future flag warnings가 client 테스트 stderr에 출력되나, 테스트 통과에는 영향을 주지 않습니다."
+  ],
+  "followups": []
+}
+```

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T4 프론트엔드 인증을 구현·완성했다. client/src/lib/axios.ts(baseURL '/api', withCredentials, mutation 메서드에 X-CSRF-Token 헤더를 자동 추가하는 요청 인터셉터), client/src/lib/csrf.ts(GET /api/auth/csrf-token 호출 + 메모리 캐싱 + 동시 요청 단일화 + clearCsrfToken), client/src/pages/Login.tsx·Register.tsx(Zod 스키마 폼 검증, 서버 에러 메시지 매핑), client/src/api/auth.ts(TanStack Query hooks: useLogin·useRegister·useLogout·useMe), client/src/stores/auth.ts(Zustand useAuth 스토어), client/src/components/ProtectedRoute.tsx(미인증 시 /login 리다이렉트, 이전 경로 state 보존), client/src/pages/Profile.tsx(/me 조회 + 로그아웃 버튼), client/src/App.tsx(React Router 라우트 구성)가 acceptance_criteria를 충족한다. 추가로 두 가지 실질적 결함을 수정했다: (1) 서버가 로그인/회원가입/로그아웃 시 CSRF 토큰을 재발급(createCsrfToken)하므로 클라이언트 캐시가 무효가 되어 후속 mutation이 403으로 실패하는 문제 — 각 hook의 onSuccess에서 clearCsrfToken()을 호출해 해결. (2) baseURL이 상대경로 '/api'라 Vite dev 서버에서 Express(3001)로 요청이 도달하지 않는 문제 — vite.config.ts에 /api 프록시를 추가해 same-origin 쿠키 인증 흐름이 dev에서도 동작하도록 함. 테스트: client/tests/{lib/axios,lib/csrf,api/auth,stores/auth,pages/Login,pages/Register,App}.test.* 작성·보강 — CSRF 캐시 무효화 호출을 단언하는 케이스 포함. 검증: `npm test` 통과(client 20/20, server 25/25), `tsc --noEmit`(client) 통과.",
+  "changed_files": [
+    "client/src/lib/axios.ts",
+    "client/src/lib/csrf.ts",
+    "client/src/types/schemas.ts",
+    "client/src/stores/auth.ts",
+    "client/src/api/auth.ts",
+    "client/src/components/ProtectedRoute.tsx",
+    "client/src/pages/Login.tsx",
+    "client/src/pages/Register.tsx",
+    "client/src/pages/Profile.tsx",
+    "client/src/App.tsx",
+    "client/src/App.test.tsx",
+    "client/vite.config.ts",
+    "client/tests/lib/axios.test.ts",
+    "client/tests/lib/csrf.test.ts",
+    "client/tests/api/auth.test.ts",
+    "client/tests/stores/auth.test.ts",
+    "client/tests/pages/Login.test.tsx",
+    "client/tests/pages/Register.test.tsx",
+    "client/tests/App.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "cd client && npx tsc --noEmit"
+  ],
+  "known_issues": [
+    "client가 zod를 사용하지만 client/package.json에 선언되어 있지 않다 — npm workspaces 호이스팅(루트 node_modules)으로 해석되어 테스트·빌드는 통과한다. 잠재적 npm ci 불일치를 피하려면 `npm install -w client zod@^3.23.8`로 명시 선언 권장(패키지 설치 금지 규칙으로 이번 작업에서는 미적용).",
+    "client/src/index.html은 client/index.html과 중복된 잔여 파일로 보이며 빌드·테스트에 영향 없음(파일 삭제 명령 금지로 미삭제).",
+    "작업 트리 루트의 tmp-zod-test.js는 이전 실행의 임시 파일로 추정되며 테스트 대상이 아님(파일 삭제 명령 금지로 미삭제).",
+    "테스트 실행 시 React Router v7 future flag 경고(v7_startTransition, v7_relativeSplatPath)가 stderr에 출력되나 기능에는 영향 없음."
+  ],
+  "followups": [
+    "client/package.json에 zod를 명시 의존성으로 추가(npm install -w client zod)하고 package-lock.json을 갱신",
+    "루트 tmp-zod-test.js와 client/src/index.html 잔여 파일 정리",
+    "향후 403 CSRF 응답 시 토큰 재발급 후 1회 재시도하는 응답 인터셉터 고려"
+  ]
+}

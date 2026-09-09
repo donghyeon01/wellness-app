@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T7 메모 마크다운 CRUD 구현 완료. 백엔드: server/src/routes/memos.ts에 GET /(category 쿼리 필터), GET /:id, POST /, PUT /:id, DELETE /:id 엔드포인트를 Zod 스키마 검증과 함께 구현하고, server/src/services/memo.ts에서 findFirst({ id, userId }) 소유자 조건으로 본인 메모만 CRUD되도록 처리(타인 메모는 404). app.ts에 /api/memos 라우트 마운트 및 requireAuth 적용. 프론트엔드: client/src/pages/Memos.tsx에 @uiw/react-md-editor의 preview=\"live\"(작성+미리보기 분할) 에디터, MDEditor.Markdown으로 상세 마크다운 HTML 렌더링, 카테고리 select 필터, 목록/상세/생성/수정/삭제 UI 구현. client/src/api/memos.ts에 useMemos/useMemoDetail/useCreateMemo/useUpdateMemo/useDeleteMemo TanStack Query hooks 구현. client/src/types/schemas.ts에 memoSchema/memoInputSchema 추가. 검증: npm run lint 통과(0 warnings), npm run typecheck 통과, npm test 통과(client 33 tests, server 34 tests — memos 서버 9개, 클라이언트 hooks 7개, 페이지 6개 포함).",
+  "changed_files": [
+    "server/src/routes/memos.ts",
+    "server/src/services/memo.ts",
+    "server/src/app.ts",
+    "client/src/pages/Memos.tsx",
+    "client/src/api/memos.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "client/package.json",
+    "server/tests/memos.test.ts",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}

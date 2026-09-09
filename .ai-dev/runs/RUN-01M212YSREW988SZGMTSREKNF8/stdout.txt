@@ -1,0 +1,45 @@
+작업을 시작하겠습니다. 먼저 코드베이스 구조를 파악합니다.기존 코드 구조를 더 자세히 살펴보겠습니다.이전 시도에서 파일들이 이미 생성된 것 같습니다. 기존 파일들을 읽어보겠습니다.구현 파일이 이미 존재합니다. 이전 시도에서 lint 실패로 중단된 것으로 보입니다. 나머지 관련 파일과 현재 상태를 확인합니다.구현이 대부분 완료된 상태입니다. 이전 실패가 lint였으므로 나머지 지원 파일을 확인하고 검증을 실행합니다.Prisma 스키마와 tsconfig를 확인합니다.구현은 거의 완료된 상태입니다. 이제 검증 명령을 실행해 현재 상태를 확인합니다.Lint 실패 원인을 찾았습니다: `client/src/api/memos.ts`의 커스텀 훅 `useMemo`가 React 내장 `useMemo`와 이름이 충돌해 `react-hooks/exhaustive-deps` 경고가 발생합니다. 해당 훅을 참조하는 곳을 확인합니다.이름 충돌을 해소하기 위해 API 훅을 `useMemoDetail`로 리네임합니다. 세 파일을 수정합니다.이름 충돌 해소 완료. 이제 lint·typecheck·test를 실행합니다.lint와 typecheck 통과. 이제 `npm test`를 실행합니다.모든 테스트 통과(클라이언트 33개, 서버 34개). verify 파이프라인에 build도 포함되어 있으므로 빌드도 확인합니다.모든 검증 통과. git 상태를 확인하고 RESULT.json을 작성합니다.이전 커밋에 구현이 포함되어 있고, 이번 세션은 lint 실패 원인(`useMemo` 이름 충돌)을 수정했습니다. RESULT.json 경로를 확인하고 작성합니다.RESULT.json을 작성합니다.## 작업 완료 요약
+
+**T7 메모 마크다운 CRUD** — 이전 시도에서 구현이 커밋되어 있었고, 이번 세션에서는 lint 실패 원인을 해결했습니다.
+
+### 이번 세션 수정 내용
+- `client/src/api/memos.ts`: 커스텀 훅 `useMemo`가 React 내장 `useMemo`와 이름이 충돌해 `react-hooks/exhaustive-deps` 경고 2건이 발생 → `useMemoDetail`로 리네임
+- `client/src/pages/Memos.tsx`: import를 `useMemoDetail`로 갱신
+- `client/tests/api/memos.test.ts`: 훅 호출부 리네임 반영
+
+### Acceptance criteria 확인
+- ✅ `server/src/routes/memos.ts` + `server/src/services/memo.ts`: GET/GET :id/POST/PUT/DELETE 전부 구현, Zod 검증 + `userId` 소유자 조건으로 본인 메모만 CRUD (타인 접근 404)
+- ✅ `client/src/pages/Memos.tsx`: `@uiw/react-md-editor` `preview="live"`(작성+미리보기 분할), 카테고리 필터, `MDEditor.Markdown` HTML 렌더링, 목록/상세/생성/수정/삭제
+- ✅ `client/src/api/memos.ts`: TanStack Query hooks 5종
+
+### 검증 증거
+- `npm run lint` — 통과 (경고 0)
+- `npm run typecheck` — 통과
+- `npm run build` — 통과
+- `npm test` — 통과 (클라이언트 10파일 33테스트, 서버 7파일 34테스트)
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T7 메모 마크다운 CRUD 구현 완료. 백엔드: server/src/routes/memos.ts에 GET /api/memos(카테고리 필터), GET /:id, POST, PUT /:id, DELETE /:id를 requireAuth + Zod 검증으로 구현하고, server/src/services/memo.ts에서 userId 소유자 조건으로 본인 메모만 CRUD(타인 접근 시 404) 처리. app.ts에 /api/memos 라우트 마운트 완료. 프론트엔드: client/src/pages/Memos.tsx에서 @uiw/react-md-editor의 preview='live'(작성+미리보기 분할) 에디터와 MDEditor.Markdown으로 마크다운 HTML 렌더링, 카테고리 필터 셀렉트, 목록/상세/생성/수정/삭제 UI 구현. client/src/api/memos.ts에 TanStack Query hooks(useMemos, useMemoDetail, useCreateMemo, useUpdateMemo, useDeleteMemo) 구현. 이전 시도의 lint 실패 원인인 커스텀 훅 useMemo와 React 내장 useMemo의 이름 충돌(react-hooks/exhaustive-deps 경고 2건)을 useMemoDetail로 리네임하여 해소. 검증: npm run lint 통과, npm run typecheck 통과, npm run build 통과, npm test 통과(클라이언트 10파일 33테스트, 서버 7파일 34테스트).",
+  "changed_files": [
+    "server/src/routes/memos.ts",
+    "server/src/services/memo.ts",
+    "server/src/app.ts",
+    "server/tests/memos.test.ts",
+    "client/src/api/memos.ts",
+    "client/src/pages/Memos.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ]
+}
+```

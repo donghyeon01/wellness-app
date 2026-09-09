@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T6 캘린더 이벤트 CRUD를 완료했다. 백엔드: server/src/routes/events.ts에 GET(범위 겹침 조회)/POST/PUT/DELETE를 구현하고 Zod로 start < end를 검증한다(POST는 스키마 refine, PUT은 기존 값과 병합 후 검증). server/src/services/event.ts에 listEvents/createEvent/findEventById/findOwnedEvent/updateEvent/deleteEvent를 구현해 본인 이벤트만 조작 가능하다(타인 이벤트 403, 미존재 404). Prisma Event 모델(userId+start 인덱스)과 app.ts 라우트 마운트(/api/events) 확인. 프론트엔드: client/src/pages/Calendar.tsx에 react-big-calendar 월간 뷰, 생성/수정 모달(EventModal), 삭제 확인 모달(ConfirmDeleteModal)을 구현했고, client/src/lib/event-dnd.ts의 순수 로직으로 드래그 이동·양끝 리사이즈 후 updateEvent.mutate로 서버 자동 저장한다. client/src/api/events.ts에 TanStack Query hooks(useEvents/useCreateEvent/useUpdateEvent/useDeleteEvent)와 캐시 무효화를 구현했다. 검증: npm test 전체 통과(client 42 tests / 11 files, server 37 tests / 7 files), npm run typecheck 통과.",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck"
+  ],
+  "known_issues": [],
+  "followups": [
+    "react-big-calendar 공식 DnD 애드온(withDragAndDrop) 도입을 검토하면 커스텀 HTML5 DnD 코드(event-dnd.ts, MonthCell 주입)를 줄일 수 있음",
+    "주간/일간 뷰 및 반복 일정은 Phase 2 이후 확장 포인트로 남겨둠"
+  ]
+}

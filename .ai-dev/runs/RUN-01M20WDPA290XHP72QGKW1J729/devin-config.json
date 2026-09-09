@@ -1,0 +1,70 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(**)",
+      "Edit(**)",
+      "Exec(**)"
+    ],
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(*.pem)",
+      "Read(*.key)",
+      "Read(~/.ssh/**)",
+      "Read(~/.gitconfig)",
+      "Read(.git/config)",
+      "Write(.devin/**)",
+      "Write(.github/**)",
+      "Write(.env)",
+      "Write(.env.*)",
+      "Write(*.lock)",
+      "Write(package-lock.json)",
+      "Write(yarn.lock)",
+      "Write(pnpm-lock.yaml)",
+      "Write(AGENTS.md)",
+      "Exec(git push)",
+      "Exec(git push --force)",
+      "Exec(git push -f)",
+      "Exec(git reset)",
+      "Exec(git rebase)",
+      "Exec(git merge)",
+      "Exec(git clean)",
+      "Exec(git remote)",
+      "Exec(git config)",
+      "Exec(git stash)",
+      "Exec(git worktree)",
+      "Exec(rm)",
+      "Exec(rm -rf)",
+      "Exec(Remove-Item)",
+      "Exec(rmdir)",
+      "Exec(del)",
+      "Exec(erase)",
+      "Exec(sudo)",
+      "Exec(npm publish)",
+      "Exec(npm install -g)",
+      "Exec(pip install)",
+      "Exec(pip3 install)",
+      "Exec(cargo install)",
+      "Exec(brew install)",
+      "Exec(gh)",
+      "Exec(aws)",
+      "Exec(gcloud)",
+      "Exec(az)",
+      "Exec(kubectl)",
+      "Exec(terraform)",
+      "Exec(curl)",
+      "Exec(wget)",
+      "Exec(Invoke-WebRequest)",
+      "Exec(iwr)"
+    ]
+  },
+  "version": 1,
+  "devin": {
+    "org_id": "org-07db7dab6dbc46989eb8bce7840f69ed"
+  },
+  "shell": {
+    "setup_complete": true
+  },
+  "theme_mode": "dark"
+}

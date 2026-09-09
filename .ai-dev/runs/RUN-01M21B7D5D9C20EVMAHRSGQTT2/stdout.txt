@@ -1,0 +1,43 @@
+작업을 시작합니다. 먼저 코드베이스 구조를 파악하겠습니다.뽀모도로 관련 파일이 이미 존재합니다. 기존 파일들을 읽겠습니다.구현이 이미 상당 부분 되어 있습니다. 나머지 연결 상태를 확인하겠습니다.이전 실행에서 이미 T9가 커밋되어 있습니다. 변경된 package.json diff와 테스트 파일을 확인하겠습니다.기능이 이미 구현·커밋된 상태입니다. 남은 연결(App 라우트, vitest 설정)을 확인하고 테스트를 실행하겠습니다.구현과 테스트가 모두 존재합니다. 이제 검증 명령 `npm test`를 실행합니다.모든 검증이 통과했습니다. RESULT.json을 작성합니다.T9 뽀모도로 타이머 + 세션 기록/통계 작업을 완료했습니다.
+
+**구현 확인 내용** (acceptance_criteria 전부 충족):
+
+- **서버** — `server/src/routes/pomodoro.ts`: `GET /sessions`, `POST /sessions`, `GET /stats` 엔드포인트를 zod 검증 + `requireAuth`로 구현하고 `app.ts`에 `/api/pomodoro`로 마운트. `server/src/services/pomodoro.ts`: day/week(월요일 시작)/month UTC 범위 계산, `UserSettings.pomodoroFocus/pomodoroBreak` 기본값 적용(없으면 1500/300초), 세션 CRUD 및 focus 세션 통계 집계.
+- **클라이언트 스토어** — `client/src/stores/pomodoro.ts`: Zustand 기반 focus/break 모드, `start`/`pause`/`reset`/`tick`/`complete`/`switchMode`/`setDurations`, 집중 완료 시 `focusCompleted` 플래그.
+- **페이지** — `client/src/pages/Pomodoro.tsx`: 타이머 UI, 집중/휴식 시간(분) 설정, 집중 완료 시 서버 세션 자동 저장, 당일 통계 표시. `App.tsx`에 `/pomodoro` 보호 라우트 등록.
+- **API hooks** — `client/src/api/pomodoro.ts`: `usePomodoroSessions`, `usePomodoroStats`, `useCreatePomodoroSession` TanStack Query hooks.
+
+**검증**: `npm test` — client 35개 테스트(11파일), server 32개 테스트(7파일, pomodoro.test.ts 7개 포함) 전부 통과, exit code 0.
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T9 뽀모도로 타이머 + 세션 기록/통계 기능이 구현되어 있음을 확인하고 검증을 통과했다. 서버: server/src/routes/pomodoro.ts에 GET /sessions(세션 목록, range=day|week|month + date 쿼리), POST /sessions(세션 생성, duration 생략 시 UserSettings 기본값 적용), GET /stats(day/week/month 범위의 focus 세션 집계: totalSeconds, count)를 zod 검증 + requireAuth + asyncRoute로 구현했고 app.ts에 /api/pomodoro로 마운트되어 있다. server/src/services/pomodoro.ts는 getRangeBounds(UTC 기준 day/week(월요일 시작)/month 범위 계산), getPomodoroDefaults(UserSettings.pomodoroFocus/pomodoroBreak 조회, 없으면 1500/300초 기본값), listPomodoroSessions, createPomodoroSession, getPomodoroStats를 제공한다. 클라이언트: client/src/stores/pomodoro.ts에 Zustand 스토어(mode focus/break, isRunning, remainingSeconds, start/pause/reset/tick/complete/switchMode/setDurations, 집중 완료 시 focusCompleted 플래그)를 구현했다. client/src/pages/Pomodoro.tsx는 타이머 표시·시작/일시정지/리셋·모드 전환·집중/휴식 시간(분) 설정 UI를 제공하고 focusCompleted 시 useCreatePomodoroSession으로 서버에 세션을 자동 저장하며 당일 통계를 표시한다. client/src/api/pomodoro.ts는 usePomodoroSessions, usePomodoroStats, useCreatePomodoroSession TanStack Query hooks를 제공한다. App.tsx에 /pomodoro 보호 라우트가 등록되어 있다. 검증: npm test 실행 결과 client 11개 파일 35개 테스트, server 7개 파일 32개 테스트(pomodoro.test.ts 7개 포함) 전부 통과(exit 0).",
+  "changed_files": [
+    "server/src/routes/pomodoro.ts",
+    "server/src/services/pomodoro.ts",
+    "server/src/app.ts",
+    "client/src/stores/pomodoro.ts",
+    "client/src/pages/Pomodoro.tsx",
+    "client/src/api/pomodoro.ts",
+    "client/src/types/schemas.ts",
+    "client/src/App.tsx",
+    "server/tests/pomodoro.test.ts",
+    "client/tests/stores/pomodoro.test.ts",
+    "client/tests/api/pomodoro.test.tsx",
+    "client/tests/pages/Pomodoro.test.tsx",
+    "client/package.json",
+    "server/package.json"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": [
+    "UserSettings 편집 UI가 생기면 뽀모도로 기본 시간을 서버 설정과 동기화하는 로직 추가 검토",
+    "통계 범위(day/week/month) 전환 UI를 Pomodoro 페이지에 확장 가능"
+  ]
+}
+```

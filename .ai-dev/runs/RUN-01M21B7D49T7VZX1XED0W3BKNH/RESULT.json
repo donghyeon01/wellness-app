@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T5 TODO CRUD(백엔드+프론트엔드) 구현이 브랜치(ai-dev/01M20J8NRW/T5)에 완료되어 있으며, 요구사항과 인수 조건을 만족하도록 구현/검증했습니다. server/src/routes/todos.ts, server/src/services/todo.ts에서 GET/GET :id/POST/PUT/DELETE를 Zod 검증(priority 0~2, dueDate 선택, 본인 TODO만 CRUD)과 dueDate 오름차순/완료 항목 하단 정렬로 구현했습니다. client/src/api/todos.ts에서 TanStack Query hooks(useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo)를, client/src/pages/Todos.tsx에서 목록/생성폼/수정/삭제/완료 토글/completed·priority 필터 UI를 구현했습니다. npm test에서 client 30개/서버 36개 테스트 전부 통과했고, npm run lint, npm run typecheck, npm run build, 그리고 Prisma SQLite 실제 쿼리에서 nulls last 정렬도 확인했습니다.",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/routes/todos.ts",
+    "server/src/services/todo.ts",
+    "client/src/App.tsx",
+    "client/src/types/schemas.ts",
+    "client/src/api/todos.ts",
+    "client/src/pages/Todos.tsx",
+    "client/tests/api/todos.test.ts",
+    "client/tests/pages/Todos.test.tsx",
+    "server/tests/todos.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [
+    "React Router v7 future flag 경고가 테스트 출력에 표시되나 기능/테스트 통과에 영향 없음"
+  ],
+  "followups": [
+    "TODO CRUD에 대한 통합/엔드투엔드 테스트를 별도 워크플로에서 추가하면 운영 환경 신뢰성을 높일 수 있음"
+  ]
+}

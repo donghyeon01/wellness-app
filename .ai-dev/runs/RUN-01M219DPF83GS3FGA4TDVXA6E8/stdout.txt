@@ -1,0 +1,1 @@
+이 작업은 백엔드·프론트엔드 다중 파일 기능 구현이므로 `writing-plans`, `test-driven-development`, `verification-before-completion`, `common-reporting-guide` 스킬을 차례로 적용합니다. 우선 프로젝트 구조와 문서를 읽겠습니다.

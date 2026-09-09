@@ -1,0 +1,60 @@
+```json
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [
+    {
+      "severity": "critical",
+      "file": "package-lock.json",
+      "description": "npm ci 출력에 9개의 취약점(7 moderate, 1 high, 1 critical)이 보고되었다. 본 기능은 사용자 입력 마크다운을 다루는 CRUD이므로, high/critical이 운영 의존성(예: 서버 Express 경로, @uiw/react-md-editor 등)에 있다면 즉시 패치해야 한다. 현재 diff는 해당 취약점에 대한 완화/설명 없이 package-lock을 새로 추가하고 있다."
+    }
+  ],
+  "required_changes": [
+    "npm audit --json (또는 npm audit --audit-level=high)를 실행하여 high/critical 취약점을 유발하는 패키지가 무엇인지, 해당 패키지가 런타임(서버/클라이언트) 의존성인지 확인하라.",
+    "런타임 의존성이라면 npm update, npm overrides, 또는 안전한 버전으로 교체/패치하라. 개발 전용이라면 프로젝트 문서에 취약점과 허용 근거를 명시하고 운영 영향이 없음을 검증하라.",
+    "수정 후 npm run test, npm run build, npm run typecheck, npm run lint를 다시 실행하여 회귀가 없는지 확인하라."
+  ],
+  "non_blocking": [
+    "client/src/index.html과 client/index.html이 중복되어 있다. Vite 진입점은 client/index.html이므로 client/src/index.html을 제거하라.",
+    "Memos 페이지에서 생성/수정 실패 시 사용자에게 에러 메시지를 노출하지 않는다. API 에러 발생 시 적절한 피드백을 추가하라.",
+    "삭제 확인 시 window.confirm을 사용하는데, 접근성/일관성을 위해 확인 모달 컴포넌트로 교체를 고려하라.",
+    "빌드 결과 메인 청크가 1.3MB에 달한다. MDEditor 등 무거운 의존성을 지연 로딩하거나 manualChunks로 분할하면 초기 로딩 성능이 개선된다.",
+    "사용자 입력 마크다운을 MDEditor.Markdown으로 렌더링하므로, 기본 HTML 살균(sanitize) 설정을 확인하고 필요하면 rehype-sanitize 플러그인을 추가하라.",
+    "카테고리 옵션 추출을 위해 useMemos()를 별도로 호출하여 필터 선택 시 두 번의 목록 요청이 발생한다. 전체 목록 기반 클라이언트 필터링 또는 별도 카테고리 API를 고려하라."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/memos.ts, server/src/services/memo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "server 파일은 diff truncation으로 직접 보이지 않으나, executor 요약에서 GET /, GET /:id, POST /, PUT /:id, DELETE /:id 엔드포인트를 Zod 검증과 함께 /api/memos에 requireAuth로 마운트했다고 보고되었고, 서버 테스트 34개(메모 9개)가 통과했다."
+    },
+    {
+      "criterion": "Zod 검증: 본인 메모만 CRUD",
+      "met": true,
+      "evidence": "executor 요약에서 서비스가 findFirst({ id, userId })로 본인 메모만 조회하고 타인 메모는 404로 처리한다고 보고되었으며, 관련 서버 테스트가 통과했다."
+    },
+    {
+      "criterion": "client/src/pages/Memos.tsx: @uiw/react-md-editor 작성+미리보기 분할, 카테고리 필터",
+      "met": true,
+      "evidence": "Memos.tsx에서 MDEditor preview='live'로 작성과 미리보기를 분할하고, select 요소로 카테고리 필터, 목록/상세/생성/수정/삭제 UI를 구현했다. Memos.test.tsx에서 카테고리 옵션, 에디터 렌더링, 생성/삭제 플로우를 검증했다."
+    },
+    {
+      "criterion": "마크다운 HTML 렌더링, 목록/상세/생성/수정/삭제",
+      "met": true,
+      "evidence": "상세 뷰에서 MDEditor.Markdown source={selected.content}로 HTML 렌더링, 목록 선택, '새 메모'/'수정'/'삭제' 버튼, 저장 폼 제출 등 CRUD 흐름이 구현되고 테스트되었다."
+    },
+    {
+      "criterion": "client/src/api/memos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/memos.ts에 useMemos, useMemoDetail, useCreateMemo, useUpdateMemo, useDeleteMemo가 정의되어 있고, client/tests/api/memos.test.ts에서 각 메서드 호출, 파라미터, 캐시 무효화를 검증했다."
+    }
+  ]
+}
+```

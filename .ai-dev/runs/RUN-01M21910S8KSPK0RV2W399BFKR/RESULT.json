@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "캘린더 이벤트 CRUD 서버 구현을 완료했습니다. server/src/routes/events.ts의 PUT/DELETE에서 findEventById로 이벤트 조회 후 존재 여부(404)와 소유권(403)을 분리해 검증하도록 변경했고, server/src/services/event.ts에 findEventById 헬퍼를 추가했습니다. server/tests/events.test.ts에는 타인 이벤트 PUT/DELETE 시 403, 없는 이벤트 PUT 시 404, 소유자 이벤트가 실제로 변경되지 않음을 검증하는 테스트를 추가했습니다. client/src/pages/Calendar.tsx(월간 뷰, 생성/삭제 모달, DnD/리사이즈로 서버 자동 저장)와 client/src/api/events.ts(TanStack Query hooks)는 요구사항에 맞게 이미 구현되어 있습니다. 검증 결과 npm test, npm run typecheck, npm run build 모두 통과했습니다.",
+  "changed_files": [
+    "server/src/routes/events.ts",
+    "server/src/services/event.ts",
+    "server/tests/events.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test",
+    "npm run typecheck",
+    "npm run build"
+  ],
+  "needs_approval": [],
+  "known_issues": [],
+  "followups": []
+}

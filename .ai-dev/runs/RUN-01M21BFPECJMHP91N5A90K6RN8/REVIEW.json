@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "verdict": "REJECTED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [
+    {
+      "severity": "high",
+      "file": "package-lock.json",
+      "description": "npm ci 설치 후 9개 취약점(1 critical, 1 high, 7 moderate)이 보고됨. 영향 범위를 확인할 수 없으나, critical/high 취약점은 런타임이나 빌드 환경에서 악용될 수 있으므로 머지 전 반드시 조치 필요."
+    },
+    {
+      "severity": "medium",
+      "file": "client/src/pages/Todos.tsx",
+      "description": "dueDate 표시(toLocaleDateString)와 입력값 변환(toDateInputValue)에서 new Date(iso)와 로컬 getter(getFullYear/Month/Date)를 사용해 UTC 기준 자정 시간대 사용자(UTC- 등)에게 하루 밀리는 문제. dueDate 수정 시 데이터가 잘못 저장될 수 있음."
+    },
+    {
+      "severity": "medium",
+      "file": "client/src/App.test.tsx",
+      "description": "queryByRole('button', { name: '로그인' }).toBeDefined()는 요소가 없을 때 null을 반환해도 toBeDefined()가 통과해, 로그인 버튼이 실제로 렌더링되는지 검증하지 못함."
+    },
+    {
+      "severity": "medium",
+      "file": "client/tests/App.test.tsx",
+      "description": "동일한 queryByRole + toBeDefined() 안티패턴으로 /me 접근 시 /login 리다이렉트 여부를 제대로 검증하지 못함."
+    }
+  ],
+  "required_changes": [
+    "npm audit --audit-level=high 실행 후 critical/high 취약점을 식별하고, 런타임 영향이 있는 패키지는 업데이트/교체; dev-only라도 위험도와 허용 근거를 문서화. 수정 후 npm ci, npm run build, typecheck, lint, test 다시 통과 확인.",
+    "client/src/pages/Todos.tsx의 dueDate 처리를 UTC 기준으로 수정: toDateInputValue는 getUTCFullYear/Month/Date 또는 iso.split('T')[0] 사용, formatDate는 toLocaleDateString('ko-KR', { timeZone: 'UTC' }) 사용, handleSubmit는 new Date(form.dueDate + 'T00:00:00Z').toISOString() 사용. 비UTC 타임존(e.g. TZ=America/New_York)에서 dueDate가 원본과 동일하게 유지되는 테스트 추가.",
+    "client/src/App.test.tsx와 client/tests/App.test.tsx에서 queryByRole(...).toBeDefined()를 expect(queryByRole(...)).not.toBeNull() 또는 getByRole(...)로 변경하여 로그인 버튼이 실제로 렌더링되는지 검증."
+  ],
+  "non_blocking": [
+    "server 파일 diff가 truncated되어 server/src/routes/todos.ts와 server/src/services/todo.ts의 Zod 검증/본인 TODO CRUD/정렬 로직을 직접 확인하지 못했습니다. 다음 리뷰에서는 서버 diff를 포함하거나, 해당 기능을 검증하는 테스트 케이스 내용을 명시해 주세요.",
+    "TODO 생성/수정/삭제 실패 시 사용자에게 오류 메시지를 표시하는 피드백 처리를 추가하면 UX가 개선됩니다.",
+    "Todos.tsx가 300줄이 넘으므로 향후 폼/필터/리스트 컴포넌트 분리를 고려하세요."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/todos.ts, server/src/services/todo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "executor summary에 서버 라우트/서비스 구현 명시; npm test에서 서버 36개 테스트 통과; npm run build/typecheck 통과"
+    },
+    {
+      "criterion": "Zod 검증: priority 0~2, dueDate 선택, 본인 TODO만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts에서 priority 0~2, dueDate nullish/선택 검증; 서버는 diff에서 보이지 않으나 server test/executor summary로 Zod 및 본인 TODO CRUD 확인"
+    },
+    {
+      "criterion": "정렬: dueDate 오름차순, 완료 항목 하단",
+      "met": true,
+      "evidence": "executor summary에서 Prisma SQLite nulls last/dueDate 오름차순 및 완료 항목 하단 정렬 확인; client는 API 응답 순서 그대로 렌더링"
+    },
+    {
+      "criterion": "client/src/pages/Todos.tsx: 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터",
+      "met": false,
+      "evidence": "목록/생성폼/수정/삭제/완료 토글/필터 UI는 구현되어 있으나, dueDate 표시/입력 시 타임존 이슈로 UTC- 사용자에게 하루 밀리는 문제가 있어 create/edit 폼이 의도한 dueDate를 완전히 보존하지 못함"
+    },
+    {
+      "criterion": "client/src/api/todos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo 구현; client/tests/api/todos.test.tsx에서 queryKey, 캐시 무효화, ISO 변환 등 검증"
+    }
+  ]
+}

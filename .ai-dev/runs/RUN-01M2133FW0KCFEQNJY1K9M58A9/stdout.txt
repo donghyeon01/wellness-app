@@ -1,0 +1,60 @@
+## 리뷰 결과 요약
+
+diff와 검증 결과를 검토했다. 클라이언트 코드는 diff에서 직접 확인 가능했고, 서버 코드(`server/src/routes/todos.ts`, `server/src/services/todo.ts`)는 diff가 truncated되어 직접 확인하지 못했으나 executor 요약과 verifier의 테스트 통과(서버 36/36, todos 관련 11개 테스트: 인증·CRUD·필터·정렬·소유권 격리·priority 검증)를 근거로 판정했다.
+
+**확인된 내용:**
+- `client/src/api/todos.ts`: `useTodos`(completed/priority 필터 쿼리 파라미터), `useTodo`, `useCreateTodo`, `useUpdateTodo`, `useDeleteTodo` 훅과 캐시 무효화 로직 정상
+- `client/src/pages/Todos.tsx`: 목록 렌더링, 생성/수정 겸용 폼, 삭제, 완료 토글(`completed` 반전 PUT), completed/priority 필터 UI 모두 구현
+- 클라이언트 Zod 스키마: `priority` int 0~2, `dueDate` nullish + 날짜 유효성 refine 충족
+- CSRF 토큰 인터셉터, `withCredentials` 쿠키 인증, 보호 라우트 적용
+- typecheck/lint/build/test 전부 통과 (verifier 사실로 인정)
+
+**비차단 관찰 사항:**
+- `client/src/index.html`이 루트 `client/index.html`과 중복 생성됨 — 실수로 보이나 빌드에 영향 없음
+- `useTodo` 훅이 정의만 되고 페이지에서 미사용 (dead code)
+- 테스트 단언이 `toBeDefined()` 중심으로 약함 (`toBeInTheDocument()` 권장)
+- `npm ci` 시 9개 취약점(1 critical) 보고됨 — 이 작업 범위 밖이나 추후 감사 필요
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": ["correctness", "security", "tests", "requirements", "maintainability"],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/src/index.html이 루트 client/index.html과 중복되어 있음. 실수로 생성된 파일로 보이며 Vite 빌드에는 영향이 없으나 제거 권장",
+    "client/src/api/todos.ts의 useTodo 훅이 정의만 되고 Todos.tsx에서 사용되지 않음 (dead code)",
+    "테스트 단언이 toBeDefined() 중심으로 약함. jest-dom의 toBeInTheDocument() 사용 권장",
+    "npm ci 결과 9개 의존성 취약점(7 moderate, 1 high, 1 critical) 보고됨. 본 태스크 범위 밖이나 별도 감사 필요",
+    "server/src/routes/todos.ts와 server/src/services/todo.ts는 diff truncated로 직접 확인 불가. executor 요약 및 서버 테스트 통과(36/36)에 근거해 충족으로 판정"
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/todos.ts, server/src/services/todo.ts: GET/GET :id/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "diff truncated로 직접 확인 불가하나 executor 요약에 5개 라우트+requireAuth 구현 명시, app.ts /api/todos 등록 확인, verifier의 typecheck/lint/test 통과(서버 36/36, todos.test.ts 11개)를 사실로 인정"
+    },
+    {
+      "criterion": "Zod 검증: priority 0~2, dueDate 선택, 본인 TODO만 CRUD",
+      "met": true,
+      "evidence": "클라이언트 schemas.ts에서 priority int 0~2, dueDate nullish+날짜 유효성 refine 확인. 서버측 userId 스코프 격리는 executor 요약과 소유권 격리 테스트 통과로 확인"
+    },
+    {
+      "criterion": "정렬: dueDate 오름차순, 완료 항목 하단",
+      "met": true,
+      "evidence": "executor 요약에 completed asc → dueDate asc nulls last 정렬 구현 및 정렬 테스트 통과 명시. 클라이언트는 서버 정렬 결과를 그대로 렌더링"
+    },
+    {
+      "criterion": "client/src/pages/Todos.tsx: 목록, 생성 폼, 수정/삭제, 완료 토글, completed/priority 필터",
+      "met": true,
+      "evidence": "diff에서 직접 확인: todos.map 목록 렌더링, 생성/수정 겸용 폼(editingId), handleDelete, handleToggle(completed 반전 PUT), filter-completed/filter-priority select UI 구현"
+    },
+    {
+      "criterion": "client/src/api/todos.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "diff에서 직접 확인: useTodos/useTodo/useCreateTodo/useUpdateTodo/useDeleteTodo 5개 훅, 쿼리키 무효화, 필터 쿼리 파라미터 구현. 관련 테스트 6개 통과"
+    }
+  ]
+}
+```

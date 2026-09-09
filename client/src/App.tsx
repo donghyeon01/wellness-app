@@ -8,6 +8,7 @@ import Memos from "@/pages/Memos";
 import Calendar from "@/pages/Calendar";
 import Todos from "@/pages/Todos";
 import Diary from "@/pages/Diary";
+import Dashboard from "@/pages/Dashboard";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Layout } from "@/components/layout/Layout";
@@ -87,14 +88,7 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Layout>
-                    <div className="bg-background">
-                      <h1 className="text-3xl font-bold text-foreground">
-                        Wellness App
-                      </h1>
-                      <p className="text-muted-foreground">
-                        Phase 1 MVP 대시보드
-                      </p>
-                    </div>
+                    <Dashboard />
                   </Layout>
                 </ProtectedRoute>
               }

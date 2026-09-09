@@ -1,0 +1,51 @@
+리뷰 결과, 차단되는 정확성/보안 이슈는 발견되지 않았습니다. 제시된 diff, verifier 결과, 그리고 executor 요약을 종합하면 acceptance criteria를 충족하고 안전한 것으로 판단됩니다. 다만 몇 가지 비차단 개선사항을 남깁니다.
+
+```json
+{
+  "schema_version": 1,
+  "verdict": "APPROVED",
+  "checklist_used": [
+    "correctness",
+    "security",
+    "tests",
+    "requirements",
+    "maintainability"
+  ],
+  "blocking_issues": [],
+  "required_changes": [],
+  "non_blocking": [
+    "client/src/api/auth.ts의 useMe queryFn에서 setUser를 호출하는 사이드 이펙트를 onSuccess 콜백이나 select 옵션으로 옮기면 React Query queryFn 순수성을 유지할 수 있습니다.",
+    "client/src/lib/csrf.ts getCsrfToken(force=true)는 pendingPromise가 존재할 때 강제 재발급이 불가능합니다. force 호출 시 pending 완료 후 새 토큰을 요청하도록 개선하면 좋습니다.",
+    "client/package.json diff에 moment, zod 런타임 의존성이 보이지 않습니다. 실제 package.json에 포함되어 있는지 확인하세요.",
+    "월간 뷰에서 빈 셀 선택 시 종료 시각이 다음 날 00:00으로 잡혀 24시간 이벤트가 기본 생성됩니다. 사용자 기대에 맞게 +1시간 기본값을 고려하세요.",
+    "diff가 잘려 server/src/routes/events.ts, server/src/services/event.ts 코드를 직접 검토하지 못했습니다. 추후에는 완전한 diff를 포함해 주세요."
+  ],
+  "acceptance_criteria_check": [
+    {
+      "criterion": "server/src/routes/events.ts, server/src/services/event.ts: GET/POST/PUT/DELETE 구현",
+      "met": true,
+      "evidence": "executor 요약에서 /api/events 라우트와 이벤트 서비스에 GET/POST/PUT/DELETE가 구현되었다고 명시하고, server tests 37개가 통과했습니다."
+    },
+    {
+      "criterion": "Zod 검증: start < end, 본인 이벤트만 CRUD",
+      "met": true,
+      "evidence": "client/src/types/schemas.ts에 eventFormSchema로 start < end refine 검증이 있고, server 측도 Zod 및 본인 소유 검증(403)을 구현한 것으로 executor 요약과 server tests에서 확인했습니다."
+    },
+    {
+      "criterion": "client/src/pages/Calendar.tsx: react-big-calendar 월간 뷰, 이벤트 생성 모달, 삭제 확인 모달",
+      "met": true,
+      "evidence": "Calendar.tsx에서 BigCalendar 기본 뷰를 month로 설정, EventModal과 ConfirmDeleteModal을 사용해 생성/수정/삭제 플로우를 구현했습니다."
+    },
+    {
+      "criterion": "드래그 앤 드롭으로 날짜 이동, 리사이즈로 기간 변경 후 서버 자동 저장",
+      "met": true,
+      "evidence": "event-dnd.ts에서 applyMove, applyResizeStart, applyResizeEnd를 구현하고 Calendar.tsx의 handleDrop에서 updateEvent.mutate를 호출해 서버에 자동 저장합니다."
+    },
+    {
+      "criterion": "client/src/api/events.ts: TanStack Query hooks",
+      "met": true,
+      "evidence": "client/src/api/events.ts에 useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent가 TanStack Query로 구현되어 있고 client/tests/api/events.test.ts에서 검증했습니다."
+    }
+  ]
+}
+```

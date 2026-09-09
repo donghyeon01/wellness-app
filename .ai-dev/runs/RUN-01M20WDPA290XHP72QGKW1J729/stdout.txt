@@ -1,0 +1,39 @@
+작업을 시작합니다. 먼저 프로젝트 구조와 문서를 파악합니다.기존 스캐폴딩이 있습니다. 문서와 소스 코드를 읽겠습니다.기존 소스와 테스트 파일을 읽습니다.테스트가 이미 작성되어 있습니다. 기존 소스 파일들을 확인합니다.구현 파일이 이미 상당 부분 작성되어 있습니다. 한글 문자열이 깨져 보이는데, 파일 인코딩 문제인지 확인합니다.파일은 정상 UTF-8이고 콘솔 출력만 깨진 것입니다. 구현이 이미 상당 부분 존재합니다. 의존성 설치 상태를 확인하고 테스트를 실행합니다.구현과 테스트가 이미 존재합니다. 이전 세션의 산출물로 보입니다. 클라이언트 테스트 설정도 확인하고 의존성을 설치합니다.의존성을 설치합니다 (`npm install`은 승인된 명령).설치는 완료됐지만 일부 install 스크립트가 allow-scripts 정책으로 차단되었습니다. 먼저 `npm test`를 실행해 실제 영향을 확인합니다.`npm test` 실행 결과 24개 통과, 1개 실패 — `session.test.ts`의 fake timer 문제입니다. `vi.useFakeTimers()`는 현재 실제 시각에서 시작하므로 `Date.now()`가 500이 아니라 실제 타임스탬프를 반환합니다. `vi.setSystemTime(0)`을 추가해 수정합니다.이제 전체 테스트를 다시 실행합니다.전체 테스트 통과했습니다 (클라이언트 1개 + 서버 25개 = 26개). RESULT.json을 작성합니다.RESULT.json을 작성합니다.작업 완료 요약:
+
+- 기존 구현물 전수 검토: `password.ts`(Argon2id 19456/2/1 + Zod 8~128자·영문숫자), `sessions/store.ts`+`memory.ts`(TTL·touch sliding expiration), `services/auth/csrf.ts`+`middleware/csrf.ts`(세션 기반 토큰, 상수 시간 비교, POST/PUT/DELETE 403), `middleware/auth.ts`(sid httpOnly 쿠키→`req.user`, touch), `routes/auth.ts`(register/login/logout/me/csrf-token) — acceptance criteria 전부 충족 확인
+- 결함 수정: `session.test.ts` fake timer가 실제 시각 기준으로 시작해 `lastAccess===500` 기대와 불일치 → `vi.setSystemTime(0)` 추가
+- 검증: `npm test` 통과 — client 1 + server 25 = 26개 테스트, 0 실패
+
+```json
+{
+  "schema_version": 1,
+  "status": "completed",
+  "summary": "T3 백엔드 인증 및 보안 구현을 검증·완료했다. 작업트리에 이미 존재하던 구현물을 전수 검토하고 결함 1건을 수정했다.\n\n구현 확인 내역:\n- server/src/services/auth/password.ts: argon2.hash/verify를 Argon2id(memoryCost 19456, timeCost 2, parallelism 1)로 구현. passwordSchema(Zod): 8~128자 + 영문/숫자 각 1자 이상.\n- server/src/sessions/store.ts: SessionStore 인터페이스(get/set/delete/touch, ttlSec) + SessionData(userId?, csrfToken?, createdAt, lastAccess). Phase 2 Redis 전환 확장 경계 유지.\n- server/src/sessions/memory.ts: MemorySessionStore(Map 기반, TTL 만료 정리, touch로 만료 연장 및 lastAccess 갱신).\n- server/src/services/auth/csrf.ts: randomUUID 기반 CSRF 토큰 생성/세션 저장, 상수 시간 비교(길이 체크 + XOR 누적) 검증.\n- server/src/middleware/csrf.ts: POST/PUT/DELETE에서 X-CSRF-Token 헤더와 세션 토큰 비교, 불일치/누락 시 403.\n- server/src/middleware/auth.ts: httpOnly 쿠키 sid로 세션 복원, session.userId 있으면 req.user={id} 설정, 매 요청 touch(7일 sliding expiration). requireAuth는 미인증 401.\n- server/src/routes/auth.ts: POST /register(201, Zod 검증 400, 중복 이메일 409, 가입 즉시 세션 생성), POST /login(200/401), POST /logout(requireAuth, 세션 삭제 + sid·csrf-token 쿠키 만료), GET /me(requireAuth, 401), GET /csrf-token(세션+토큰 발급, sid httpOnly·csrf-token non-httpOnly 쿠키).\n- 쿠키 옵션: sid는 httpOnly+sameSite=lax+path=/+7일 maxAge+secure(production), csrf-token은 non-httpOnly.\n- server/src/app.ts: helmet, cors(credentials), cookieParser, authMiddleware→csrfMiddleware 순서 적용 후 /api/auth 마운트.\n\n수정 내역: server/tests/session.test.ts의 fake timer 테스트 2건에 vi.setSystemTime(0) 추가 — vi.useFakeTimers()는 실제 현재 시각에서 시작하므로 기대값(0/500 기준 절대시각)과 불일치해 1개 테스트가 실패하고 있었다.\n\n검증: npm test 전체 통과 — client 1개, server 25개 총 26개 테스트 0 실패 (vitest run, exit 0).",
+  "changed_files": [
+    "server/src/app.ts",
+    "server/src/index.ts",
+    "server/src/lib/prisma.ts",
+    "server/src/middleware/auth.ts",
+    "server/src/middleware/csrf.ts",
+    "server/src/routes/auth.ts",
+    "server/src/services/auth/csrf.ts",
+    "server/src/services/auth/password.ts",
+    "server/src/sessions/memory.ts",
+    "server/src/sessions/store.ts",
+    "server/src/types/express.d.ts",
+    "server/tests/session.test.ts"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "known_issues": [
+    "npm install 시 환경의 allow-scripts 정책으로 argon2·@prisma/client·prisma·esbuild의 install/postinstall 스크립트가 차단됨. argon2는 패키지 내 prebuilt 바이너리로 동작해 테스트는 통과했으나, 실제 빌드/타입체크를 위해서는 `npx prisma generate` 실행이 필요할 수 있음(현재 테스트는 prisma를 vi.mock으로 대체하므로 영향 없음).",
+    "server/src/index.test.ts가 src/ 내부에 있어 tsc 빌드 시 dist에 포함될 수 있음(기능 영향 없음)."
+  ],
+  "followups": [
+    "운영 환경 전환 시 RedisSessionStore 구현(SessionStore 인터페이스 구현체 추가) 및 SESSION_SECRET·DATABASE_URL 등 환경 변수 설정",
+    "Phase 2에서 카카오 OAuth·휴대폰 인증용 AuthProvider 인터페이스 도입",
+    "로그인 시도 rate limiting 추가(보안 체크리스트 항목)"
+  ]
+}
+```

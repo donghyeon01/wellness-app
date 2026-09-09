@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "partial",
+  "summary": "메모 마크다운 CRUD를 백엔드+프론트엔드 모두 구현했다. [서버] server/src/services/memo.ts에 listMemos/getMemo/createMemo/updateMemo/deleteMemo를 추가하고 모든 조회·수정·삭제를 userId로 스코핑해 타인 메모는 404로 처리(존재 여부 비노출). server/src/routes/memos.ts에 GET /, GET /:id, POST /, PUT /:id, DELETE /:id를 구현하고 router.use(requireAuth) + Zod 스키마(title 1~200자 필수, content 최대 10만자 기본값 '', category 최대 50자 nullish, PUT은 partial+최소 1필드 refine, 목록 쿼리 category)로 검증. server/src/app.ts에 /api/memos 라우트 등록 — 기존 CSRF 미들웨어가 mutation을 자동 검증한다. [클라이언트] client/src/types/schemas.ts에 memoSchema/memoInputSchema와 Memo/MemoInput 타입 추가. client/src/api/memos.ts에 useMemos(['memos', category], ?category= 파라미터), useMemo(id), useCreateMemo/useUpdateMemo/useDeleteMemo(각각 POST/PUT/DELETE 후 ['memos'] invalidate) TanStack Query hooks 구현. client/src/pages/Memos.tsx에 목록/상세/생성/수정/삭제 UI를 구현: @uiw/react-md-editor의 preview=\"live\"로 작성+미리보기 분할, 상세는 MDEditor.Markdown으로 마크다운 HTML 렌더링, 카테고리 select 필터(전체 목록에서 카테고리 추출), 제목 미입력 시 Zod 오류 표시, 삭제 전 window.confirm. App.tsx에 /memos 라우트(ProtectedRoute) 추가. [테스트] server/tests/memos.test.ts는 prisma를 인메모리 mock해 401/403/201/400/목록 userId 격리/카테고리 필터/단건·수정·삭제 소유권 404 등 9개 케이스. client/tests/api/memos.test.ts는 axios mock으로 5개 hook × 7개 케이스(파라미터, invalidate 호출 검증). client/tests/pages/Memos.test.tsx는 @uiw/react-md-editor를 최소 textarea/미리보기로 mock해 목록·필터·선택 미리보기·에디터 표시·생성 제출·검증 오류·삭제 6개 케이스. 기존 App 테스트 2곳에 @uiw 모듈 mock을 추가해 jsdom 안전성 확보. [미검증] 워크트리와 메인 저장소 어디에도 node_modules가 없고 패키지 설치가 금지 목록이라 npm test는 'vitest' 명령 없음으로 실패 — 의존성 설치 승인 후 재검증 필요.",
+  "changed_files": [
+    "server/src/services/memo.ts",
+    "server/src/routes/memos.ts",
+    "server/src/app.ts",
+    "client/src/types/schemas.ts",
+    "client/src/api/memos.ts",
+    "client/src/pages/Memos.tsx",
+    "client/src/App.tsx",
+    "client/src/App.test.tsx",
+    "client/tests/App.test.tsx",
+    "server/tests/memos.test.ts",
+    "client/tests/api/memos.test.ts",
+    "client/tests/pages/Memos.test.tsx"
+  ],
+  "tests_claimed": [
+    "npm test"
+  ],
+  "needs_approval": [
+    {
+      "kind": "dependency",
+      "command": "npm install",
+      "reason": "워크트리에 node_modules가 전혀 없어 npm test가 'vitest' 명령을 찾지 못해 실패했다. package-lock.json 기준 의존성 설치(npm ci 또는 npm install)가 필요하지만 패키지 설치는 금지 명령이라 실행하지 않았다. 설치 후 npm test로 server/tests/memos.test.ts, client/tests/api/memos.test.ts, client/tests/pages/Memos.test.tsx를 검증해야 한다."
+    }
+  ],
+  "known_issues": [
+    "npm test 미실행: node_modules 부재로 vitest가 설치되어 있지 않아 검증 명령이 'vitest'를 찾지 못하고 종료된다. 의존성 설치 승인 후 실행 필요.",
+    "@uiw/react-md-editor 미리보기는 라이브러리 기본 렌더링에 의존한다. docs/auth-security.md 체크리스트의 '마크다운 렌더링 sanitize' 항목을 엄격히 적용하려면 rehype-sanitize 등 추가 패키지가 필요할 수 있으나, 신규 의존성 추가가 승인 게이트 대상이라 적용하지 않았다.",
+    "client 패키지는 zod를 직접 의존성으로 선언하지 않고 워크스페이스 호이스팅에 의존한다(기존 types/schemas.ts와 동일한 관례)."
+  ],
+  "followups": [
+    "npm install(또는 npm ci) 승인 후 npm test 실행으로 서버·클라이언트 테스트 통과 확인",
+    "마크다운 XSS 방어가 요구 수준을 충족하는지 @uiw/react-markdown-preview의 기본 sanitize 동작 확인, 필요 시 rehype-sanitize 도입 검토",
+    "Memos 페이지는 App.tsx에서 eager import되므로 에디터 번들 크기가 부담되면 React.lazy 지연 로딩 검토"
+  ]
+}
